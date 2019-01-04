@@ -5,15 +5,21 @@ use self::postgres::{Connection, SslMode};
 
 
 #[derive(Debug)]
-struct PostgresSqlData {
+pub struct PostgresSqlData {
     _connection: Option<Connection>,
     _name: String,
 }
 
-use BdLayer::PostgresDealer::postgres::error::{ConnectError,Error};
+impl PostgresSqlData {
+    pub fn new() -> PostgresSqlData {
+        PostgresSqlData { _connection: None, _name: "".to_string() }
+    }
+}
+
+use self::postgres::error::{ConnectError,Error};
 use BdLayer::PostgresCommands::PostgresCommand;
 
-trait PostgresDealer {
+pub trait PostgresDealer {
     /// Подключиться к БД (создать коннект).
     fn connect(&mut self, name: &str) -> Result<(), ConnectError>;
 
@@ -24,7 +30,7 @@ trait PostgresDealer {
     fn isOpen(&self) -> bool;
 
     /// Выполнить комманду
-    fn doCommand<T: PostgresCommand>(&mut self, command: Box<T>) -> Result<(),Error>;
+    fn doCommand<T: PostgresCommand>(&mut self, command: T) -> Result<(),Error>;
 }
 
 impl PostgresDealer for PostgresSqlData
@@ -71,7 +77,7 @@ impl PostgresDealer for PostgresSqlData
     }
 
     /// Выполнить комманду
-    fn doCommand<T: PostgresCommand>(&mut self, command: Box<T>) -> Result<(),Error> {
+    fn doCommand<T: PostgresCommand>(&mut self, command: T) -> Result<(),Error> {
         if self.isOpen() == false {
             panic!("no connect to Bd");
         }

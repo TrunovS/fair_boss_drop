@@ -1,7 +1,6 @@
 // pub mod PostgresDealer;
 
-use BdLayer::PostgresDealer::postgres::Connection;
-use BdLayer::PostgresDealer::postgres::error::Error;
+use BdLayer::PostgresDealer::postgres::{Connection, error::Error};
 
 pub trait PostgresCommand {
     fn execute(&self, connect: &Connection) -> Result<(), Error> where Self: Sized;
@@ -17,18 +16,13 @@ impl PostgresInitTables {
 impl PostgresCommand for PostgresInitTables {
     fn execute(&self,connect: &Connection) -> Result<(),Error> {
         connect.batch_execute("
+            CREATE TABLE subperson (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR NOT NULL );
+
             CREATE TABLE person (
             id SERIAL PRIMARY KEY,
-            name NOT NULL
-            );
-
-            CREATE TABLE purchase (
-            id SERIAL PRIMARY KEY,
-            person INT NOT NULL REFERENCES person (id),
-            time TIMESTAMPTZ NOT NULL,
-            );
-
-            CREATE INDEX ON purchase (time);
+            name VARCHAR NOT NULL );
            ")
     }
 }
