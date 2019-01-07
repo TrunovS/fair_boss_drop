@@ -1,7 +1,9 @@
 pub extern crate postgres;
-use self::postgres::{Connection, SslMode};
-// mod BdDealer;
 
+use self::postgres::{Connection, ConnectParams, ConnectTarget, UserInfo, SslMode};
+use self::postgres::error::{ConnectError, Error};
+use BdLayer::PostgresCommands::PostgresCommand;
+use BdLayer::Settings;
 
 
 #[derive(Debug)]
@@ -16,12 +18,10 @@ impl PostgresSqlData {
     }
 }
 
-use self::postgres::error::{ConnectError,Error};
-use BdLayer::PostgresCommands::PostgresCommand;
-
 pub trait PostgresDealer {
+
     /// Подключиться к БД (создать коннект).
-    fn connect(&mut self, name: &str) -> Result<(), ConnectError>;
+    fn connect(&mut self) -> Result<(), ConnectError>;
 
     /// Закрыть коннект к БД
     fn finish(&mut self) -> Result<(), Error>;
@@ -36,13 +36,19 @@ pub trait PostgresDealer {
 impl PostgresDealer for PostgresSqlData
 {
     /// Подключиться к БД (создать коннект).
-    fn connect(&mut self, name: &str) -> Result<(), ConnectError> {
+    fn connect(&mut self) -> Result<(), ConnectError> {
         if let Some(s) = &self._connection {
             panic!("Trying to open new connect when old is not closed Yet/");
         }
 
-        self._name = name.to_string();
-        match Connection::connect(name, &SslMode::None) {
+        Settings::initConfig().unwrap();
+        let (connect_par, ssl_mode) = Settings::readConfig();
+
+        if let Some(name) = &connect_par.database {
+            self._name = name.to_string();
+        };
+
+        match Connection::connect(connect_par, &ssl_mode) {
             Ok(connection) => {
                 self._connection = Some(connection);
                 return Ok(());
