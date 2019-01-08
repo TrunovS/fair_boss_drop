@@ -14,13 +14,13 @@ pub fn initConfig() -> Result<(),io::Error> {
     }
 
     let mut conf = Ini::new();
-    conf.with_section(None)
+    conf.with_section::<String>(None)
         .set("encoding", "utf-8")
         .set("host", "localhost")
         .set("port", "5432")
         .set("sslmode", "disable")
         .set("dbname", "postgres")
-        .set("user", "postres")
+        .set("user", "postgres")
         .set("pass", "qwerty");
 
     return conf.write_to_file(cfg_file);
