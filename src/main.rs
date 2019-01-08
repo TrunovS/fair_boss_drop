@@ -2,14 +2,12 @@ extern crate iron;
 extern crate router;
 extern crate url;
 
-use iron::*;
-
-mod BdLayer;
 mod handlers;
+mod BdLayer;
 
-use BdLayer::PostgresDealer::*;
-use BdLayer::PostgresCommands::*;
+use iron::*;
 use std::sync::{Arc, Mutex};
+use BdLayer::PostgresDealer::*;
 
 fn serve(db: PostgresSqlData) {
     let sdb = Arc::new(Mutex::new(db));
@@ -27,10 +25,6 @@ fn serve(db: PostgresSqlData) {
 fn main() {
     let mut bd_data = PostgresSqlData::new();
     bd_data.connect().unwrap();
-    bd_data.doCommand(PostgresInitTables::new()).unwrap();
-    println!("status of connection: {}", bd_data.isOpen());
-    bd_data.finish().unwrap();
-    println!("status of connection: {}", bd_data.isOpen());
 
     println!("Hello, world!");
 }

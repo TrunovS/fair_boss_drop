@@ -5,7 +5,13 @@ use postgres::Connection;
 use std::io::Read;
 use std::sync::Mutex;
 
+mod BdLayer;
+use BdLayer::PostgresCommands::*;
+use BdLayer::PostgresDealer::*;
+
 pub fn get_bosses(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<Response> {
+    // bd_data.doCommand(PostgresInitTables::new()).unwrap();
+
     let url = req.url.clone().into_generic_url();
     let path = url.path().unwrap();
     let sid: &str = &path.iter().last().unwrap();
