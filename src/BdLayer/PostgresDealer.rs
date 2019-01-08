@@ -59,7 +59,6 @@ impl PostgresDealer for PostgresSqlData
 
     /// Закрыть коннект к БД
     fn finish(&mut self) -> Result<(), Error> {
-        let result = ();
         match self._connection.take() {
             Some(connect) => {
                 match connect.finish() {
@@ -71,7 +70,7 @@ impl PostgresDealer for PostgresSqlData
         };
 
         self._name = "".to_string();
-        Ok(result)
+        Ok(())
     }
 
     /// Определелить активно ли подключение к БД.
