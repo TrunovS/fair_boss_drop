@@ -46,3 +46,48 @@ END $$;
         res
     }
 }
+
+
+use std::collections::LinkedList;
+pub struct PostgresGetItemTypes {
+    // items: LinkedList<Item>
+};
+
+impl PostgresGetItemTypes {
+    pub fn new() -> PostgresGetItemTypes {
+        PostgresGetItemTypes { }
+    }
+}
+
+impl PostgresCommand for PostgresGetItemTypes {
+    fn execute(&self,connect: &Connection) -> Result<(),Error> {
+        let trans = connect.transaction().unwrap();
+        let res = trans.execute("
+            SELECT id, label FROM item_types ORDER BY id ASC;
+           ");
+        trans.commit().unwrap();
+        res
+    }
+}
+
+pub struct PostgresGetBosses {
+    //list of bosses
+};
+
+impl PostgresGetBosses {
+    pub fn new() -> PostgresGetBosses {
+        PostgresGetBosses { }
+    }
+    pub getBosses(&self)
+}
+
+impl PostgresCommand for PostgresGetBosses {
+    fn execute(&self,connect: &Connection) -> Result<(),Error> {
+        let trans = connect.transaction().unwrap();
+        let res = trans.batch_execute("
+            SELECT id, label FROM bosses ORDER BY id ASC;
+           ");
+        trans.commit().unwrap();
+        res
+    }
+}
