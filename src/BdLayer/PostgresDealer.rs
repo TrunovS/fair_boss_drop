@@ -2,7 +2,6 @@ pub extern crate postgres;
 
 use self::postgres::{Connection, ConnectParams, ConnectTarget, UserInfo, SslMode};
 use self::postgres::error::{ConnectError, Error};
-use BdLayer::PostgresCommands::PostgresCommand;
 use BdLayer::Settings;
 
 
@@ -18,6 +17,14 @@ impl PostgresSqlData {
     }
 }
 
+pub enum CommandResult {
+    HAS_DATA(bool),
+}
+
+pub trait PostgresCommand {
+    fn execute(&mut self, connect: &Connection) -> Result<CommandResult, Error> where Self: Sized;
+}
+
 pub trait PostgresDealer {
 
     /// Подключиться к БД (создать коннект).
@@ -30,7 +37,7 @@ pub trait PostgresDealer {
     fn isOpen(&self) -> bool;
 
     /// Выполнить комманду
-    fn doCommand<T: PostgresCommand>(&mut self, command: T) -> Result<(),Error>;
+    fn doCommand<T: PostgresCommand>(&mut self, command: &mut T) -> Result<CommandResult,Error>;
 }
 
 impl PostgresDealer for PostgresSqlData
@@ -82,7 +89,7 @@ impl PostgresDealer for PostgresSqlData
     }
 
     /// Выполнить комманду
-    fn doCommand<T: PostgresCommand>(&mut self, command: T) -> Result<(),Error> {
+    fn doCommand<T: PostgresCommand>(&mut self, command: &mut T) -> Result<CommandResult,Error> {
         if self.isOpen() == false {
             panic!("no connect to Bd");
         }

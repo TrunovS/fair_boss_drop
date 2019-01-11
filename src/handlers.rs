@@ -6,11 +6,20 @@ use std::io::Read;
 use std::sync::Mutex;
 
 use BdLayer::PostgresCommands::*;
+use BdLayer::ItemsCommands::*;
 use BdLayer::PostgresDealer::*;
 
 pub fn get_bosses(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<Response> {
     let mut bd_data = sdb.lock().unwrap();
-    bd_data.doCommand(PostgresInitTables::new()).unwrap();
+    {
+        let mut initTables = PostgresInitTables::new();
+        bd_data.doCommand(&mut initTables).unwrap();
+    }
+    {
+        let mut getItemTypes = PostgresGetItemTypes::new();
+        bd_data.doCommand(&mut getItemTypes).unwrap();
+        println!("{:?}",getItemTypes.getData());
+    }
 
     Ok(Response::with((status::Ok,"Command executed")))
 
