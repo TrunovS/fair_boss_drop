@@ -50,9 +50,9 @@ impl PostgresInsertItemTypes {
 impl PostgresCommand for PostgresInsertItemTypes {
     fn execute(&mut self,connect: &Connection) -> Result<(),Error> {
         let trans = connect.transaction().unwrap();
-        let statement = trans.prepare("
-            INSERT INTO item_types VALUES(default, $1);
-").unwrap();
+        let statement = trans.prepare("INSERT INTO item_types VALUES(default, $1);")
+            .unwrap();
+
         match statement.query(&[&self._label]) {
             Ok(rows) => {    trans.commit().unwrap();
                              return Ok(());

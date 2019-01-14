@@ -34,7 +34,7 @@ END $$;
 
             CREATE TABLE IF NOT EXISTS bosses (
             id SERIAL PRIMARY KEY,
-            label VARCHAR NOT NULL,
+            label VARCHAR NOT NULL UNIQUE,
             level INTEGER NOT NULL DEFAULT '0',
             drop item_probability[]
             );
