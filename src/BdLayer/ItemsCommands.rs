@@ -10,6 +10,7 @@ impl PostgresGetItemTypes {
     pub fn new() -> PostgresGetItemTypes {
         PostgresGetItemTypes { _items: LinkedList::new() }
     }
+
     pub fn getData(&self) -> &LinkedList<String> {
         return &self._items;
     }
@@ -18,46 +19,55 @@ impl PostgresGetItemTypes {
 impl PostgresCommand for PostgresGetItemTypes {
     fn execute(&mut self,connect: &Connection) -> Result<CommandResult,Error> {
         let trans = connect.transaction().unwrap();
-        match trans.query("SELECT id, label FROM item_types ORDER BY id ASC;") {
-            Ok(row) => {    let mut iter = rows.iter();
-                            while let Ok(row) = iter.next() {
-                                self._items.append(row.get("label"));
-                            }
+        let statement = trans.prepare("SELECT id, label FROM item_types ORDER BY id ASC;").unwrap();
+        match statement.query(&[]) {
+            Ok(rows) => {    let mut iter = rows.iter();
+                             while let Some(row) = iter.next() {
+                                 self._items.push_back(row.get("label"));
+                             }
 
-                            trans.commit().unwrap();
-                            return Ok(CommandResult::HAS_DATA(true));
+                             trans.commit().unwrap();
+                             return Ok(CommandResult::HAS_DATA(true));
             },
             Err(er) =>  {
                 trans.commit().unwrap();
                 return Err(er);
             }
         }
+    }
 }
 
-// pub struct PostgresInsertItemTypes {
-//     _items: LinkedList<String>,
-// }
+pub struct PostgresInsertItemTypes {
+    _label: String,
+}
 
-// impl PostgresInsertItemTypes {
-//     pub fn new() -> PostgresInsertItemTypes {
-//         PostgresInsertItemTypes { }
-//     }
+impl PostgresInsertItemTypes {
+    pub fn new() -> PostgresInsertItemTypes {
+        PostgresInsertItemTypes { _label: String::new("") }
+    }
 
-//     pub fn setData(&mut self, items: LinkedList<String>) {
-//         self._items = items;
-//     }
-// }
+    pub fn setData(&mut self, label: String) {
+        self._label = label;
+    }
+}
 
-// impl PostgresCommand for PostgresInsertItemTypes {
-//     fn execute(&mut self,connect: &Connection) -> Result<CommandResult,Error> {
-//         let trans = connect.transaction().unwrap();
-//         let res = trans.execute("
-//             SELECT id, label FROM item_types ORDER BY id ASC;
-//            ");
-//         trans.commit().unwrap();
-//         match res {
-//             Ok(v) => return Ok(CommandResult::HAS_DATA(true)),
-//             Err(e) => return Err(e),
-//         };
-//     }
-// }
+impl PostgresCommand for PostgresInsertItemTypes {
+    fn execute(&mut self,connect: &Connection) -> Result<CommandResult,Error> {
+        let trans = connect.transaction().unwrap();
+        let statement = trans.prepare("INSERT INTO item_types VALUES(default, $1);").unwrap();
+        match statement.query(&[self._label]) {
+            Ok(rows) => {    let mut iter = rows.iter();
+                             while let Some(row) = iter.next() {
+                                 self._items.push_back(row.get("label"));
+                             }
+
+                             trans.commit().unwrap();
+                             return Ok(CommandResult::HAS_DATA(true));
+            },
+            Err(er) =>  {
+                trans.commit().unwrap();
+                return Err(er);
+            }
+        }
+    }
+}
