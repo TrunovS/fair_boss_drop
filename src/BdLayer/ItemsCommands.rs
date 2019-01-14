@@ -64,3 +64,5 @@ impl PostgresCommand for PostgresInsertItemTypes {
         }
     }
 }
+
+// select * from test as bt where id = ANY(select unnest(list) from test as ids where label = 'борщ');
