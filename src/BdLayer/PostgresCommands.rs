@@ -1,4 +1,4 @@
-use BdLayer::PostgresDealer::{PostgresCommand, CommandResult};
+use BdLayer::PostgresDealer::PostgresCommand;
 use BdLayer::PostgresDealer::postgres::{Connection, error::Error};
 
 pub struct PostgresInitTables;
@@ -9,12 +9,12 @@ impl PostgresInitTables {
 }
 
 impl PostgresCommand for PostgresInitTables {
-    fn execute(&mut self,connect: &Connection) -> Result<CommandResult,Error> {
+    fn execute(&mut self,connect: &Connection) -> Result<(),Error> {
         let trans = connect.transaction().unwrap();
         let res = trans.batch_execute("
             CREATE TABLE IF NOT EXISTS item_types (
             id SERIAL PRIMARY KEY,
-            label VARCHAR NOT NULL
+            label VARCHAR NOT NULL UNIQUE
             );
 
             CREATE TABLE IF NOT EXISTS items (
@@ -41,7 +41,7 @@ END $$;
            ");
         trans.commit().unwrap();
         match res {
-            Ok(var) => return Ok(CommandResult::HAS_DATA(false)),
+            Ok(var) => return Ok(()),
             Err(er) => return Err(er),
         };
     }

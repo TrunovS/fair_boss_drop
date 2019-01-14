@@ -18,8 +18,31 @@ pub fn get_bosses(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult
     {
         let mut getItemTypes = PostgresGetItemTypes::new();
         bd_data.doCommand(&mut getItemTypes).unwrap();
-        println!("{:?}",getItemTypes.getData());
+        println!("start {:?}",getItemTypes.getData());
     }
+
+    {
+        let mut addItemTypes = PostgresInsertItemTypes::new("tip1");
+        match bd_data.doCommand(&mut addItemTypes) {
+            Ok(res) => {  println!("item added"); },
+            Err(er) => {  println!("{}",er); }
+        };
+    }
+    {
+        let mut addItemTypes = PostgresInsertItemTypes::new("tip2");
+        match bd_data.doCommand(&mut addItemTypes) {
+            Ok(res) => {  println!("item added"); },
+            Err(er) => {  println!("{}",er); }
+        };
+    }
+
+    {
+        let mut getItemTypes = PostgresGetItemTypes::new();
+        bd_data.doCommand(&mut getItemTypes).unwrap();
+        println!("end {:?}",getItemTypes.getData());
+    }
+
+
 
     Ok(Response::with((status::Ok,"Command executed")))
 
