@@ -37,17 +37,17 @@ impl PostgresCommand for PostgresGetItemTypes {
     }
 }
 
-pub struct PostgresInsertItemTypes {
+pub struct PostgresInsertItemType {
     _label: String,
 }
 
-impl PostgresInsertItemTypes {
-    pub fn new(label: &str) -> PostgresInsertItemTypes {
-        PostgresInsertItemTypes { _label: label.to_string() }
+impl PostgresInsertItemType {
+    pub fn new(label: &str) -> PostgresInsertItemType {
+        PostgresInsertItemType { _label: label.to_string() }
     }
 }
 
-impl PostgresCommand for PostgresInsertItemTypes {
+impl PostgresCommand for PostgresInsertItemType {
     fn execute(&mut self,connect: &Connection) -> Result<(),Error> {
         let trans = connect.transaction().unwrap();
         let statement = trans.prepare("INSERT INTO item_types VALUES(default, $1);")

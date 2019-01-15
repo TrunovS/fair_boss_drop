@@ -22,15 +22,15 @@ pub fn get_bosses(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult
     }
 
     {
-        let mut addItemTypes = PostgresInsertItemTypes::new("tip1");
-        match bd_data.doCommand(&mut addItemTypes) {
+        let mut addItemType = PostgresInsertItemType::new("tip1");
+        match bd_data.doCommand(&mut addItemType) {
             Ok(res) => {  println!("item added"); },
             Err(er) => {  println!("{}",er); }
         };
     }
     {
-        let mut addItemTypes = PostgresInsertItemTypes::new("tip2");
-        match bd_data.doCommand(&mut addItemTypes) {
+        let mut addItemType = PostgresInsertItemType::new("tip2");
+        match bd_data.doCommand(&mut addItemType) {
             Ok(res) => {  println!("item added"); },
             Err(er) => {  println!("{}",er); }
         };

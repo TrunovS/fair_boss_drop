@@ -17,16 +17,26 @@ impl PostgresCommand for PostgresInitTables {
             label VARCHAR NOT NULL UNIQUE
             );
 
+DO $$ BEGIN
+            CREATE TYPE item_quantity AS (
+            id INTEGER NOT NULL,
+            quantity INTEGER NOT NULL
+            );
+            EXCEPTION
+               WHEN duplicate_object THEN null;
+END $$;
+
             CREATE TABLE IF NOT EXISTS items (
             id SERIAL PRIMARY KEY,
             label VARCHAR NOT NULL,
-            type SERIAL REFERENCES item_types (id)
+            type SERIAL REFERENCES item_types (id),
+            equals item_quantity[]
             );
 
 DO $$ BEGIN
             CREATE TYPE item_probability AS (
-            id INTEGER,
-            probability NUMERIC(7,6)
+            id INTEGER NOT NULL,
+            probability NUMERIC(7,6) NOT NULL
             );
             EXCEPTION
                WHEN duplicate_object THEN null;
