@@ -4,11 +4,11 @@ use std::collections::LinkedList;
 
 pub struct PostgresGetBosses {
     _bosses: LinkedList<String>
-};
+}
 
 impl PostgresGetBosses {
     pub fn new() -> PostgresGetBosses {
-        PostgresGetBosses { }
+        PostgresGetBosses { _bosses: LinkedList::new() }
     }
     pub fn getData(&self) -> &LinkedList<String> {
         return &self._bosses;
@@ -48,17 +48,18 @@ pub struct PostgresInsertBoss {
 }
 
 impl PostgresInsertBoss {
-    pub fn new(label: &str, level: &i32, drop: LinkedList<item_probability>) -> PostgresInsertBoss {
+    pub fn new(label: &str, level: i32, drop: LinkedList<item_probability>) -> PostgresInsertBoss {
         PostgresInsertBoss { _label: label.to_string(), _level: level, _drop: drop }
     }
-    pub fn convertDropToSql(&self) -> String {
+    fn convertDropToSql(&self) -> String {
         let mut sql = String::from("ARRAY[ ");
 
-        for el in _drop.iter() {
-            sql.push_str(format!("cast(({}, {}) as item_probability),", el._id, el._probability));
+        for el in self._drop.iter() {
+            sql.push_str(&format!("cast(({}, {}) as item_probability),", el._id, el._probability));
         }
         sql.pop();
         sql.push_str(" ]");
+        println!("{}",sql);
         sql
     }
 }
@@ -66,6 +67,8 @@ impl PostgresInsertBoss {
 impl PostgresCommand for PostgresInsertBoss {
     fn execute(&mut self,connect: &Connection) -> Result<(),Error> {
         let trans = connect.transaction().unwrap();
+        let dbg = format!("INSERT INTO bosses VALUES(default, {}, {}, {});",self._label,self._level, self.convertDropToSql());
+        println!("{}",dbg);
         let statement = trans.prepare("INSERT INTO bosses VALUES(default, $1, $2, $3);")
             .unwrap();
 

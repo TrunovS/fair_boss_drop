@@ -19,8 +19,8 @@ impl PostgresCommand for PostgresInitTables {
 
 DO $$ BEGIN
             CREATE TYPE item_quantity AS (
-            id INTEGER NOT NULL,
-            quantity INTEGER NOT NULL
+            id INTEGER,
+            quantity INTEGER
             );
             EXCEPTION
                WHEN duplicate_object THEN null;
@@ -35,8 +35,8 @@ END $$;
 
 DO $$ BEGIN
             CREATE TYPE item_probability AS (
-            id INTEGER NOT NULL,
-            probability NUMERIC(7,6) NOT NULL
+            id INTEGER,
+            probability NUMERIC(7,6)
             );
             EXCEPTION
                WHEN duplicate_object THEN null;

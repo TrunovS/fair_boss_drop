@@ -4,10 +4,13 @@ use postgres::Connection;
 
 use std::io::Read;
 use std::sync::Mutex;
+use std::collections::LinkedList;
 
 use BdLayer::PostgresCommands::*;
 use BdLayer::ItemsCommands::*;
+use BdLayer::BossCommands::*;
 use BdLayer::PostgresDealer::*;
+
 
 pub fn get_bosses(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<Response> {
     let mut bd_data = sdb.lock().unwrap();
@@ -41,8 +44,13 @@ pub fn get_bosses(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult
         bd_data.doCommand(&mut getItemTypes).unwrap();
         println!("end {:?}",getItemTypes.getData());
     }
-
-
+    {
+        let mut items_list = LinkedList::new();
+        items_list.push_back(item_probability{ _id:2, _probability: 0.5});
+        items_list.push_back(item_probability{_id:3, _probability: 0.25});
+        let mut insertBoss = PostgresInsertBoss::new("boss4",2,items_list);
+        bd_data.doCommand(&mut insertBoss).unwrap();
+    }
 
     Ok(Response::with((status::Ok,"Command executed")))
 
