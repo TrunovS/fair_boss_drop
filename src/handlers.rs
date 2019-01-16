@@ -44,12 +44,24 @@ pub fn get_bosses(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult
         bd_data.doCommand(&mut getItemTypes).unwrap();
         println!("end {:?}",getItemTypes.getData());
     }
+
+    // {
+    //     let mut items_list = LinkedList::new();
+    //     items_list.push_back(item_probability{ _id:2, _probability: 0.5});
+    //     items_list.push_back(item_probability{_id:3, _probability: 0.25});
+    //     let mut insertBoss = PostgresInsertBoss::new("boss4",2,items_list);
+    //     bd_data.doCommand(&mut insertBoss).unwrap();
+    // }
     {
-        let mut items_list = LinkedList::new();
-        items_list.push_back(item_probability{ _id:2, _probability: 0.5});
-        items_list.push_back(item_probability{_id:3, _probability: 0.25});
-        let mut insertBoss = PostgresInsertBoss::new("boss4",2,items_list);
-        bd_data.doCommand(&mut insertBoss).unwrap();
+        let mut getBosses = PostgresGetBosses::new();
+        bd_data.doCommand(&mut getBosses).unwrap();
+        println!("Bosses {:?}",getBosses.getData());
+    }
+
+    {
+        let mut getBoss = PostgresGetBoss::new("boss3");
+        bd_data.doCommand(&mut getBoss).unwrap();
+        // println!("Bosses {:?}",getBoss.getData());
     }
 
     Ok(Response::with((status::Ok,"Command executed")))

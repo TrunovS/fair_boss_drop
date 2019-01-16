@@ -2,6 +2,53 @@ use BdLayer::PostgresDealer::PostgresCommand;
 use BdLayer::PostgresDealer::postgres::{Connection, error::Error};
 use std::collections::LinkedList;
 
+pub struct item_probability {
+    pub _id: i32,
+    pub _probability: f32,
+}
+
+
+pub struct PostgresGetBoss {
+    _label: String,
+    _level: Option<i32>,
+    _drop: Option<LinkedList<item_probability>>,
+}
+
+impl PostgresGetBoss {
+    pub fn new(label: &str) -> PostgresGetBoss {
+        PostgresGetBoss { _label: String::from(label), _level: None, _drop: None  }
+    }
+    // pub fn getData(&self) -> &LinkedList<String> {
+    //     return &self._bosses;
+    // }
+}
+
+impl PostgresCommand for PostgresGetBoss {
+    fn execute(&mut self,connect: &Connection) -> Result<(),Error> {
+        let trans = connect.transaction().unwrap();
+        let statement = trans.prepare("SELECT * FROM bosses WHERE label=$1;").unwrap();
+        match statement.query(&[]) {
+            Ok(rows) => {    let mut iter = rows.iter();
+                             while let Some(row) = iter.next() {
+                                 self._level = Some(row.get("level"));
+                                 // self._drop = Some(row.get("drop"));
+                                 let vd: Vec<item_probability> = row.get("drop");
+                                 println!("{:?}",vd);
+                             }
+
+                             trans.commit().unwrap();
+                             return Ok(());
+            },
+            Err(er) =>  {
+                trans.commit().unwrap();
+                return Err(er);
+            }
+        }
+    }
+}
+
+
+
 pub struct PostgresGetBosses {
     _bosses: LinkedList<String>
 }
@@ -36,11 +83,6 @@ impl PostgresCommand for PostgresGetBosses {
     }
 }
 
-pub struct item_probability {
-    pub _id: i32,
-    pub _probability: f32,
-}
-
 pub struct PostgresInsertBoss {
     _label: String,
     _level: i32,
@@ -59,7 +101,6 @@ impl PostgresInsertBoss {
         }
         sql.pop();
         sql.push_str(" ]");
-        println!("{}",sql);
         sql
     }
 }
@@ -67,12 +108,11 @@ impl PostgresInsertBoss {
 impl PostgresCommand for PostgresInsertBoss {
     fn execute(&mut self,connect: &Connection) -> Result<(),Error> {
         let trans = connect.transaction().unwrap();
-        let dbg = format!("INSERT INTO bosses VALUES(default, {}, {}, {});",self._label,self._level, self.convertDropToSql());
-        println!("{}",dbg);
-        let statement = trans.prepare("INSERT INTO bosses VALUES(default, $1, $2, $3);")
-            .unwrap();
+        let sql = format!("INSERT INTO bosses VALUES(default, '{}', {}, {});",
+                          self._label,self._level, self.convertDropToSql());
+        let statement = trans.prepare(&sql).unwrap();
 
-        match statement.query(&[&self._label, &self._level, &self.convertDropToSql()]) {
+        match statement.query(&[]) {
             Ok(rows) => {    trans.commit().unwrap();
                              return Ok(());
             },
