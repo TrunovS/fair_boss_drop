@@ -1,7 +1,10 @@
 pub extern crate postgres;
+extern crate postgres_derive;
 
-use self::postgres::{Connection, ConnectParams, ConnectTarget, UserInfo, SslMode};
-use self::postgres::error::{ConnectError, Error};
+
+use self::postgres::{Connection, TlsMode};
+use self::postgres::params::ConnectParams;
+use self::postgres::error::Error;
 use BdLayer::Settings;
 
 
@@ -24,7 +27,7 @@ pub trait PostgresCommand {
 pub trait PostgresDealer {
 
     /// Подключиться к БД (создать коннект).
-    fn connect(&mut self) -> Result<(), ConnectError>;
+    fn connect(&mut self) -> Result<(), Error>;
 
     /// Закрыть коннект к БД
     fn finish(&mut self) -> Result<(), Error>;
@@ -39,7 +42,7 @@ pub trait PostgresDealer {
 impl PostgresDealer for PostgresSqlData
 {
     /// Подключиться к БД (создать коннект).
-    fn connect(&mut self) -> Result<(), ConnectError> {
+    fn connect(&mut self) -> Result<(), Error> {
         if let Some(s) = &self._connection {
             panic!("Trying to open new connect when old is not closed Yet/");
         }

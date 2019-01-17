@@ -4,7 +4,10 @@ use std::io;
 use std::path::Path;
 use std::str::FromStr;
 
-use BdLayer::PostgresDealer::postgres::{ConnectParams, ConnectTarget, UserInfo, SslMode};
+use BdLayer::PostgresDealer::postgres::{Connection, TlsMode};
+use BdLayer::PostgresDealer::postgres::params::{ConnectParams,User,Host};
+use BdLayer::PostgresDealer::postgres::error::Error;
+// use BdLayer::PostgresDealer::postgres::{ConnectParams, ConnectTarget, User, TlsMode};
 
 const cfg_file: &'static str = "db_conf.ini";
 
@@ -28,7 +31,7 @@ pub fn initConfig() -> Result<(),io::Error> {
 
 
 /// Прочитать конфиг подключения
-pub fn readConfig() -> (ConnectParams, SslMode) {
+pub fn readConfig() -> (ConnectParams, TlsMode) {
     let conf = Ini::load_from_file(cfg_file).unwrap();
     let general = conf.general_section();
 
@@ -40,15 +43,15 @@ pub fn readConfig() -> (ConnectParams, SslMode) {
     let pass = general.get("pass").unwrap();
 
     let s = match sslmode.as_ref() {
-        "disable" => SslMode::None,
+        "disable" => TlsMode::None,
         "enable" => unimplemented!(),
         _ => panic!("Wrong sslmode"),
     };
 
     (ConnectParams {
-        target: ConnectTarget::Tcp(host.clone()),
+        host: Host::Tcp(host.clone()),
         port: Some(FromStr::from_str(port).unwrap()),
-        user: Some(UserInfo {
+        user: Some(User {
             user: user.clone(),
             password: Some(pass.clone()),
         }),

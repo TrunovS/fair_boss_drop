@@ -2,10 +2,18 @@ use BdLayer::PostgresDealer::PostgresCommand;
 use BdLayer::PostgresDealer::postgres::{Connection, error::Error};
 use std::collections::LinkedList;
 
+#[derive(Debug, FromSql, ToSql)]
+#[postgres(name="item_probability")]
 pub struct item_probability {
     pub _id: i32,
     pub _probability: f32,
 }
+
+// impl ToSql for item_probability {
+//     fn to_sql<W: Write+?Sized>(&self,_:&Type,mut w: &mut W, _: &SessionInfo) -> Result<IsNull> {
+
+//     }
+// }
 
 
 pub struct PostgresGetBoss {
