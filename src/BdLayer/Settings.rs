@@ -4,10 +4,8 @@ use std::io;
 use std::path::Path;
 use std::str::FromStr;
 
-use ::postgres::{Connection, TlsMode};
-use ::postgres::params::{ConnectParams,User,Host};
-use ::postgres::error::Error;
-// use BdLayer::PostgresDealer::postgres::{ConnectParams, ConnectTarget, User, TlsMode};
+use ::postgres::TlsMode;
+use ::postgres::params::{ConnectParams,Host};
 
 const cfg_file: &'static str = "db_conf.ini";
 

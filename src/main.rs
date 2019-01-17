@@ -1,4 +1,4 @@
-extern crate BdLayer;
+extern crate fair_boss_drop_server;
 
 #[macro_use]
 extern crate serde_derive;
@@ -11,10 +11,11 @@ extern crate router;
 extern crate url;
 
 mod handlers;
-mod BdLayer;
 
 use iron::*;
 use std::sync::{Arc, Mutex};
+
+use fair_boss_drop_server::BdLayer;
 use BdLayer::PostgresDealer::*;
 use BdLayer::PostgresCommands::PostgresInitTables;
 

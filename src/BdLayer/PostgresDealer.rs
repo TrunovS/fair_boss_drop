@@ -1,5 +1,4 @@
-use ::postgres::{Connection, TlsMode};
-use ::postgres::params::ConnectParams;
+use ::postgres::Connection;
 use ::postgres::error::Error;
 use BdLayer::Settings;
 

@@ -1,6 +1,6 @@
 use iron::*;
 use iron::mime::{Mime, TopLevel, SubLevel};
-use postgres::Connection;
+use fair_boss_drop_server::postgres::Connection;
 
 use std::io::Read;
 use std::sync::Mutex;
