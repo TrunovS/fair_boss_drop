@@ -12,57 +12,60 @@ use BdLayer::BossCommands::*;
 use BdLayer::PostgresDealer::*;
 
 
+pub fn get_item_types(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<Response> {
+    let mut bd_data = sdb.lock().unwrap();
+
+    let mut getItemTypes = PostgresGetItemTypes::new();
+    bd_data.doCommand(&mut getItemTypes).unwrap();
+    println!("start {:?}",getItemTypes.getData());
+
+    Ok(Response::with((status::Ok,"Get Item Types executed")))
+}
+
+pub fn insert_item_type(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<Response> {
+    let mut bd_data = sdb.lock().unwrap();
+
+    let mut addItemType = PostgresInsertItemType::new("tip1");
+    match bd_data.doCommand(&mut addItemType) {
+        Ok(res) => {  println!("item added"); },
+        Err(er) => {  println!("{}",er); }
+    };
+    Ok(Response::with((status::Ok,"insert item type executed")))
+}
+
+pub fn insert_boss(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<Response> {
+    let mut bd_data = sdb.lock().unwrap();
+
+    let mut items_list = LinkedList::new();
+    items_list.push_back(item_probability{ _id:2, _probability: 0.5});
+    items_list.push_back(item_probability{_id:3, _probability: 0.25});
+    let mut insertBoss = PostgresInsertBoss::new("boss4",2,items_list);
+    match bd_data.doCommand(&mut insertBoss) {
+        Ok(res) => {  println!("boss added"); },
+        Err(er) => {  println!("{}",er); }
+    }
+
+    Ok(Response::with((status::Ok,"insert boss executed")))
+}
+
+pub fn get_boss(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<Response> {
+    let mut bd_data = sdb.lock().unwrap();
+
+    let mut getBoss = PostgresGetBoss::new("boss3");
+    match bd_data.doCommand(&mut getBoss) {
+        Ok(res) => {  println!("get boss"); },
+        Err(er) => {  println!("{}",er); }
+    }
+
+    Ok(Response::with((status::Ok,"Get boss executed")))
+}
+
 pub fn get_bosses(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<Response> {
     let mut bd_data = sdb.lock().unwrap();
-    {
-        let mut initTables = PostgresInitTables::new();
-        bd_data.doCommand(&mut initTables).unwrap();
-    }
-    {
-        let mut getItemTypes = PostgresGetItemTypes::new();
-        bd_data.doCommand(&mut getItemTypes).unwrap();
-        println!("start {:?}",getItemTypes.getData());
-    }
 
-    {
-        let mut addItemType = PostgresInsertItemType::new("tip1");
-        match bd_data.doCommand(&mut addItemType) {
-            Ok(res) => {  println!("item added"); },
-            Err(er) => {  println!("{}",er); }
-        };
-    }
-    {
-        let mut addItemType = PostgresInsertItemType::new("tip2");
-        match bd_data.doCommand(&mut addItemType) {
-            Ok(res) => {  println!("item added"); },
-            Err(er) => {  println!("{}",er); }
-        };
-    }
-
-    {
-        let mut getItemTypes = PostgresGetItemTypes::new();
-        bd_data.doCommand(&mut getItemTypes).unwrap();
-        println!("end {:?}",getItemTypes.getData());
-    }
-
-    // {
-    //     let mut items_list = LinkedList::new();
-    //     items_list.push_back(item_probability{ _id:2, _probability: 0.5});
-    //     items_list.push_back(item_probability{_id:3, _probability: 0.25});
-    //     let mut insertBoss = PostgresInsertBoss::new("boss4",2,items_list);
-    //     bd_data.doCommand(&mut insertBoss).unwrap();
-    // }
-    {
-        let mut getBosses = PostgresGetBosses::new();
-        bd_data.doCommand(&mut getBosses).unwrap();
-        println!("Bosses {:?}",getBosses.getData());
-    }
-
-    {
-        let mut getBoss = PostgresGetBoss::new("boss3");
-        bd_data.doCommand(&mut getBoss).unwrap();
-        // println!("Bosses {:?}",getBoss.getData());
-    }
+    let mut getBosses = PostgresGetBosses::new();
+    bd_data.doCommand(&mut getBosses).unwrap();
+    println!("Bosses {:?}",getBosses.getData());
 
     Ok(Response::with((status::Ok,"Command executed")))
 
