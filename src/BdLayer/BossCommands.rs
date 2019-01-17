@@ -32,8 +32,8 @@ impl PostgresCommand for PostgresGetBoss {
                              while let Some(row) = iter.next() {
                                  self._level = Some(row.get("level"));
                                  // self._drop = Some(row.get("drop"));
-                                 let vd: Vec<item_probability> = row.get("drop");
-                                 println!("{:?}",vd);
+                                 // let vd: Vec<item_probability> = row.get("drop");
+                                 // println!("{:?}",vd);
                              }
 
                              trans.commit().unwrap();

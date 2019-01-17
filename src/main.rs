@@ -22,16 +22,16 @@ fn serve(db: PostgresSqlData) {
     {
         let sdb_ = sdb.clone();
 
-        router.get("/api/v0/itemtypes",
-                   move |req: &mut Request|
-                   handlers::get_item_types(&sdb_.clone(), req),
-                   "test_bosses");
-
-        router.get("/api/v0/bosses",
-                   move |req: &mut Request|
-                   handlers::get_bosses(&sdb_.clone(), req),
-                   "test_bosses");
+        router.get("/api/v0/itemtypes", move |req: &mut Request|
+                   handlers::get_item_types(&sdb_.clone(), req), "get_all_item_types");
     }
+    {
+        let sdb_ = sdb.clone();
+
+        router.get("/api/v0/bosses", move |req: &mut Request|
+                   handlers::get_bosses(&sdb_.clone(), req), "get_all_bosses");
+    }
+
     Iron::new(router).http("localhost:3000").unwrap();
 }
 
@@ -39,10 +39,9 @@ fn serve(db: PostgresSqlData) {
 fn main() {
     let mut bd_data = PostgresSqlData::new();
     bd_data.connect().unwrap();
-
     {
         let mut initTables = PostgresInitTables::new();
-        bd_data.doCommand(&mut initTables).unwrap();
+        bd_data.doCommand(&mut initTables).expect("Error when init db tables");
     }
 
     serve(bd_data);
