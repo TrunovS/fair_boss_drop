@@ -1,6 +1,4 @@
 pub extern crate postgres;
-extern crate postgres_derive;
-
 
 use self::postgres::{Connection, TlsMode};
 use self::postgres::params::ConnectParams;
@@ -50,11 +48,11 @@ impl PostgresDealer for PostgresSqlData
         Settings::initConfig().unwrap();
         let (connect_par, ssl_mode) = Settings::readConfig();
 
-        if let Some(name) = &connect_par.database {
+        if let Some(name) = connect_par.database() {
             self._name = name.to_string();
         };
 
-        match Connection::connect(connect_par, &ssl_mode) {
+        match Connection::connect(connect_par, ssl_mode) {
             Ok(connection) => {
                 self._connection = Some(connection);
                 return Ok(());

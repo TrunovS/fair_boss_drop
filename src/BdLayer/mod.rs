@@ -1,3 +1,6 @@
+// #[macro_use]
+// extern crate postgres_derive;
+
 // init module
 pub mod PostgresDealer;
 pub mod PostgresCommands;

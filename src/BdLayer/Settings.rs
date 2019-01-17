@@ -31,7 +31,7 @@ pub fn initConfig() -> Result<(),io::Error> {
 
 
 /// Прочитать конфиг подключения
-pub fn readConfig() -> (ConnectParams, TlsMode) {
+pub fn readConfig() -> (ConnectParams, TlsMode<'static>) {
     let conf = Ini::load_from_file(cfg_file).unwrap();
     let general = conf.general_section();
 
@@ -48,15 +48,10 @@ pub fn readConfig() -> (ConnectParams, TlsMode) {
         _ => panic!("Wrong sslmode"),
     };
 
-    (ConnectParams {
-        host: Host::Tcp(host.clone()),
-        port: Some(FromStr::from_str(port).unwrap()),
-        user: Some(User {
-            user: user.clone(),
-            password: Some(pass.clone()),
-        }),
-        database: Some(dbname.clone()),
-        options: vec![],
-    },
+    (ConnectParams::builder()
+     .user(&user,Some(&pass))
+     .port(FromStr::from_str(port).unwrap())
+     .database(&dbname)
+     .build(Host::Tcp(host.clone())),
      s)
 }
