@@ -1,8 +1,6 @@
-pub extern crate postgres;
-
-use self::postgres::{Connection, TlsMode};
-use self::postgres::params::ConnectParams;
-use self::postgres::error::Error;
+use ::postgres::{Connection, TlsMode};
+use ::postgres::params::ConnectParams;
+use ::postgres::error::Error;
 use BdLayer::Settings;
 
 

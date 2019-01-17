@@ -1,5 +1,5 @@
 use BdLayer::PostgresDealer::PostgresCommand;
-use BdLayer::PostgresDealer::postgres::{Connection, error::Error};
+use ::postgres::{Connection, error::Error};
 use std::collections::LinkedList;
 
 pub struct PostgresGetItemTypes {
