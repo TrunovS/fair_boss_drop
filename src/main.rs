@@ -23,20 +23,16 @@ use BdLayer::PostgresCommands::PostgresInitTables;
 fn serve(db: PostgresSqlData) {
     let sdb = Arc::new(Mutex::new(db));
     let mut router = router::Router::new();
-    {
-        let sdb_ = sdb.clone();
 
+    {   let sdb_ = sdb.clone();
         router.get("/api/v0/itemtypes", move |req: &mut Request|
-                   item_handlers::get_item_types(&sdb_.clone(), req), "get_all_item_types");
-    }
-    {
-        let sdb_ = sdb.clone();
+                   item_handlers::get_item_types(&sdb_.clone(), req), "get_all_item_types"); }
 
+    {   let sdb_ = sdb.clone();
         router.get("/api/v0/bosses", move |req: &mut Request|
-                   boss_handlers::get_bosses(&sdb_.clone(), req), "get_all_bosses");
-    }
+                   boss_handlers::get_bosses(&sdb_.clone(), req), "get_all_bosses");    }
 
-    Iron::new(router).http("localhost:3000").unwrap();
+    Iron::new(router).http("localhost:3000").expect("Error when start iron server.");
 }
 
 
