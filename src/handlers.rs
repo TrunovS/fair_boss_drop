@@ -39,9 +39,9 @@ pub fn insert_item_type(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> Iron
 pub fn insert_boss(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<Response> {
     let mut bd_data = sdb.lock().unwrap();
 
-    let mut items_list = LinkedList::new();
-    items_list.push_back(ItemProbability{ _id:2, _probability: 0.5});
-    items_list.push_back(ItemProbability{_id:3, _probability: 0.25});
+    let mut items : Vec<ItemProbability> = Vec::new();
+    items.push(ItemProbability{ _id:2, _probability: 0.5});
+    items.push(ItemProbability{ _id:3, _probability: 0.25});
 
     let mut insertBoss = PostgresInsertBoss::new("boss4",2,items_list);
     match bd_data.doCommand(&mut insertBoss) {

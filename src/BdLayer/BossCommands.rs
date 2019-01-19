@@ -95,33 +95,22 @@ impl PostgresCommand for PostgresGetBosses {
 pub struct PostgresInsertBoss {
     _label: String,
     _level: i32,
-    _drop: LinkedList<ItemProbability>,
+    _drop: Vec<ItemProbability>,
 }
 
 impl PostgresInsertBoss {
-    pub fn new(label: &str, level: i32, drop: LinkedList<ItemProbability>) -> PostgresInsertBoss {
+    pub fn new(label: &str, level: i32, drop: Vec<ItemProbability>) -> PostgresInsertBoss {
         PostgresInsertBoss { _label: label.to_string(), _level: level, _drop: drop }
-    }
-    fn convertDropToSql(&self) -> String {
-        let mut sql = String::from("ARRAY[ ");
-
-        for el in self._drop.iter() {
-            sql.push_str(&format!("cast(({}, {}) as ItemProbability),", el._id, el._probability));
-        }
-        sql.pop();
-        sql.push_str(" ]");
-        sql
     }
 }
 
 impl PostgresCommand for PostgresInsertBoss {
     fn execute(&mut self,connect: &Connection) -> Result<(),Error> {
         let trans = connect.transaction().unwrap();
-        let sql = format!("INSERT INTO bosses VALUES(default, '{}', {}, {});",
-                          self._label,self._level, self.convertDropToSql());
-        let statement = trans.prepare(&sql).unwrap();
 
-        match statement.query(&[]) {
+        let statement = trans.prepare("INSERT INTO bosses VALUES(default, $1, $2, $3);").unwrap();
+
+        match statement.query(&[&self._label,&self._level,&self._drop]) {
             Ok(rows) => {    trans.commit().unwrap();
                              return Ok(());
             },
