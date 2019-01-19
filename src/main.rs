@@ -18,6 +18,8 @@ use std::sync::{Arc, Mutex};
 use fair_boss_drop_server::BdLayer;
 use BdLayer::PostgresDealer::*;
 use BdLayer::PostgresCommands::PostgresInitTables;
+use BdLayer::BossCommands::*;
+use std::collections::LinkedList;
 
 fn serve(db: PostgresSqlData) {
     let sdb = Arc::new(Mutex::new(db));
@@ -45,6 +47,26 @@ fn main() {
     {
         let mut initTables = PostgresInitTables::new();
         bd_data.doCommand(&mut initTables).expect("Error when init db tables");
+    }
+
+    // {
+    //     let mut lst = LinkedList::new();
+    //     lst.push_back(item_probability::new(1,0.2));
+    //     lst.push_back(item_probability::new(2,0.4));
+
+    //     let mut insertBoss = PostgresInsertBoss::new("boss1",1,lst);
+    //     match bd_data.doCommand(&mut insertBoss) {
+    //         Ok(res) => { println!("Boss inserted"); },
+    //         Err(e) => { println!("err {}",e); }
+    //     }
+    // }
+
+    {
+        let mut getBoss = PostgresGetBoss::new("boss1");
+        match bd_data.doCommand(&mut getBoss) {
+            Ok(res) => { println!("Boss get "); },
+            Err(e) => { println!("err {}",e); }
+        }
     }
 
     serve(bd_data);

@@ -36,7 +36,7 @@ END $$;
 DO $$ BEGIN
             CREATE TYPE item_probability AS (
             id INTEGER,
-            probability NUMERIC(7,6)
+            probability REAL
             );
             EXCEPTION
                WHEN duplicate_object THEN null;

@@ -4,22 +4,23 @@ use std::collections::LinkedList;
 
 #[derive(Debug, FromSql, ToSql)]
 #[postgres(name="item_probability")]
-pub struct item_probability {
+pub struct ItemProbability {
+    #[postgres(name="id")]
     pub _id: i32,
+    #[postgres(name="probability")]
     pub _probability: f32,
 }
 
-// impl ToSql for item_probability {
-//     fn to_sql<W: Write+?Sized>(&self,_:&Type,mut w: &mut W, _: &SessionInfo) -> Result<IsNull> {
-
-//     }
-// }
-
+impl ItemProbability {
+    pub fn new(id: i32, probability: f32) -> ItemProbability {
+        ItemProbability { _id: id, _probability: probability.into() }
+    }
+}
 
 pub struct PostgresGetBoss {
     _label: String,
     _level: Option<i32>,
-    _drop: Option<LinkedList<item_probability>>,
+    _drop: Option<Vec<ItemProbability>>,
 }
 
 impl PostgresGetBoss {
@@ -35,13 +36,13 @@ impl PostgresCommand for PostgresGetBoss {
     fn execute(&mut self,connect: &Connection) -> Result<(),Error> {
         let trans = connect.transaction().unwrap();
         let statement = trans.prepare("SELECT * FROM bosses WHERE label=$1;").unwrap();
-        match statement.query(&[]) {
+        match statement.query(&[&self._label]) {
             Ok(rows) => {    let mut iter = rows.iter();
                              while let Some(row) = iter.next() {
                                  self._level = Some(row.get("level"));
-                                 // self._drop = Some(row.get("drop"));
-                                 // let vd: Vec<item_probability> = row.get("drop");
-                                 // println!("{:?}",vd);
+                                 self._drop = Some(row.get("drop"));
+
+                                 println!("{:?}",self._drop);
                              }
 
                              trans.commit().unwrap();
@@ -94,18 +95,18 @@ impl PostgresCommand for PostgresGetBosses {
 pub struct PostgresInsertBoss {
     _label: String,
     _level: i32,
-    _drop: LinkedList<item_probability>,
+    _drop: LinkedList<ItemProbability>,
 }
 
 impl PostgresInsertBoss {
-    pub fn new(label: &str, level: i32, drop: LinkedList<item_probability>) -> PostgresInsertBoss {
+    pub fn new(label: &str, level: i32, drop: LinkedList<ItemProbability>) -> PostgresInsertBoss {
         PostgresInsertBoss { _label: label.to_string(), _level: level, _drop: drop }
     }
     fn convertDropToSql(&self) -> String {
         let mut sql = String::from("ARRAY[ ");
 
         for el in self._drop.iter() {
-            sql.push_str(&format!("cast(({}, {}) as item_probability),", el._id, el._probability));
+            sql.push_str(&format!("cast(({}, {}) as ItemProbability),", el._id, el._probability));
         }
         sql.pop();
         sql.push_str(" ]");

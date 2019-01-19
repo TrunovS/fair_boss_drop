@@ -40,8 +40,8 @@ pub fn insert_boss(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResul
     let mut bd_data = sdb.lock().unwrap();
 
     let mut items_list = LinkedList::new();
-    items_list.push_back(item_probability{ _id:2, _probability: 0.5});
-    items_list.push_back(item_probability{_id:3, _probability: 0.25});
+    items_list.push_back(ItemProbability{ _id:2, _probability: 0.5});
+    items_list.push_back(ItemProbability{_id:3, _probability: 0.25});
 
     let mut insertBoss = PostgresInsertBoss::new("boss4",2,items_list);
     match bd_data.doCommand(&mut insertBoss) {
