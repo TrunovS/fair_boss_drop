@@ -1,11 +1,5 @@
 extern crate fair_boss_drop_server;
 
-#[macro_use]
-extern crate serde_derive;
-
-extern crate serde;
-extern crate serde_json;
-
 extern crate iron;
 extern crate router;
 extern crate url;

@@ -1,8 +1,9 @@
 use BdLayer::PostgresDealer::PostgresCommand;
 use ::postgres::{Connection, error::Error};
 use std::collections::LinkedList;
+use ::serde_derive;
 
-
+#[derive(Serialize, Deserialize)]
 #[derive(Debug, FromSql, ToSql)]
 #[postgres(name="item_probability")]
 pub struct ItemProbability {

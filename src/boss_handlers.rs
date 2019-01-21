@@ -7,6 +7,7 @@ use std::sync::Mutex;
 use BdLayer::BossCommands::*;
 use BdLayer::PostgresDealer::*;
 use BdLayer::ItemsCommands::ItemProbability;
+use ::{serde_derive, serde, serde_json};
 
 pub fn insert_boss(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<Response> {
     let mut bd_data = sdb.lock().unwrap();
@@ -27,13 +28,33 @@ pub fn insert_boss(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResul
 pub fn get_boss(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<Response> {
     let mut bd_data = sdb.lock().unwrap();
 
-    let mut get_boss = PostgresGetBoss::new().with_label("boss3");
-    match bd_data.doCommand(&mut get_boss) {
-        Ok(res) => {  println!("get boss"); },
-        Err(er) => {  println!("{}",er); }
+    let url: Url = req.url.clone();
+    let path = url.path();
+    let sid: &str = &path.iter().last().unwrap();
+    let id;
+    if let Ok(r) = sid.parse() {
+        id = r;
+    } else {
+        return Ok(Response::with((status::BadRequest, "bad id")));
     }
 
-    Ok(Response::with((status::Ok,"Get boss executed")))
+    let mut get_boss = PostgresGetBoss::new().with_id(id);
+    match bd_data.doCommand(&mut get_boss) {
+        Ok(res) => {
+            println!("get boss");
+            if let Ok(json) = serde_json::to_string(&get_boss) {
+                let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
+                return Ok(Response::with((content_type, status::Ok, json)));
+            }
+            else {
+                return Ok(Response::with((status::InternalServerError,
+                                          "couldn't convert records to JSON")));
+            }
+        },
+        Err(er) => { println!("{}",er);
+                     return Ok(Response::with((status::InternalServerError, er)));
+        }
+    }
 }
 
 pub fn get_bosses(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<Response> {
@@ -48,16 +69,6 @@ pub fn get_bosses(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult
     }
 
     Ok(Response::with((status::Ok,"Command executed")))
-
-    // let url = req.url.clone().into_generic_url();
-    // let path = url.path().unwrap();
-    // let sid: &str = &path.iter().last().unwrap();
-    // let id;
-    // if let Ok(r) = sid.parse() {
-    //     id = r;
-    // } else {
-    //     return Ok(Response::with((status::BadRequest, "bad id")));
-    // }
 
     // let json_record;
     // if let Ok(recs) = ::db::read_one(sdb, id) {
