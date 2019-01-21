@@ -2,6 +2,23 @@ use BdLayer::PostgresDealer::PostgresCommand;
 use ::postgres::{Connection, error::Error};
 use std::collections::LinkedList;
 
+
+#[derive(Debug, FromSql, ToSql)]
+#[postgres(name="item_probability")]
+pub struct ItemProbability {
+    #[postgres(name="id")]
+    pub _id: i32,
+    #[postgres(name="probability")]
+    pub _probability: f32,
+}
+
+impl ItemProbability {
+    pub fn new(id: i32, probability: f32) -> ItemProbability {
+        ItemProbability { _id: id, _probability: probability.into() }
+    }
+}
+
+
 pub struct PostgresGetItemTypes {
     _items: LinkedList<String>,
 }

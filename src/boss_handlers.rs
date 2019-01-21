@@ -6,6 +6,7 @@ use std::sync::Mutex;
 
 use BdLayer::BossCommands::*;
 use BdLayer::PostgresDealer::*;
+use BdLayer::ItemsCommands::ItemProbability;
 
 pub fn insert_boss(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<Response> {
     let mut bd_data = sdb.lock().unwrap();
@@ -26,7 +27,7 @@ pub fn insert_boss(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResul
 pub fn get_boss(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<Response> {
     let mut bd_data = sdb.lock().unwrap();
 
-    let mut get_boss = PostgresGetBoss::new("boss3");
+    let mut get_boss = PostgresGetBoss::new().with_label("boss3");
     match bd_data.doCommand(&mut get_boss) {
         Ok(res) => {  println!("get boss"); },
         Err(er) => {  println!("{}",er); }

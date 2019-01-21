@@ -1,62 +1,98 @@
 use BdLayer::PostgresDealer::PostgresCommand;
 use ::postgres::{Connection, error::Error};
 use std::collections::LinkedList;
+use BdLayer::ItemsCommands::ItemProbability;
 
-#[derive(Debug, FromSql, ToSql)]
-#[postgres(name="item_probability")]
-pub struct ItemProbability {
-    #[postgres(name="id")]
-    pub _id: i32,
-    #[postgres(name="probability")]
-    pub _probability: f32,
-}
-
-impl ItemProbability {
-    pub fn new(id: i32, probability: f32) -> ItemProbability {
-        ItemProbability { _id: id, _probability: probability.into() }
-    }
+enum GetBossBy {
+    ID,
+    LABEL,
+    NONE
 }
 
 pub struct PostgresGetBoss {
-    _label: String,
+    _id: Option<u32>,
+    _label: Option<String>,
     _level: Option<i32>,
     _drop: Option<Vec<ItemProbability>>,
+    _opt: GetBossBy,
 }
 
 impl PostgresGetBoss {
-    pub fn new(label: &str) -> PostgresGetBoss {
-        PostgresGetBoss { _label: String::from(label), _level: None, _drop: None  }
+    pub fn new() -> PostgresGetBoss {
+        PostgresGetBoss { _id: None, _label: None, _level: None, _drop: None, _opt: GetBossBy::NONE }
     }
-    // pub fn getData(&self) -> &LinkedList<String> {
-    //     return &self._bosses;
-    // }
+    pub fn with_label(mut self,label: &str) -> PostgresGetBoss {
+        self._label = Some(String::from(label));
+        self._id = None;
+        self._opt = GetBossBy::LABEL;
+        self
+    }
+    pub fn with_id(mut self,id: u32) -> PostgresGetBoss {
+        self._label = None;
+        self._id = Some(id);
+        self._opt = GetBossBy::ID;
+        self
+    }
 }
 
 impl PostgresCommand for PostgresGetBoss {
     fn execute(&mut self,connect: &Connection) -> Result<(),Error> {
         let trans = connect.transaction().unwrap();
-        let statement = trans.prepare("SELECT * FROM bosses WHERE label=$1;").unwrap();
-        match statement.query(&[&self._label]) {
-            Ok(rows) => {    let mut iter = rows.iter();
-                             while let Some(row) = iter.next() {
-                                 self._level = Some(row.get("level"));
-                                 self._drop = Some(row.get("drop"));
+        match &self._opt {
+            GetBossBy::ID => {
+                let statement = trans.prepare("SELECT * FROM bosses WHERE id=$1;").unwrap();
+                match statement.query(&[&self._id]) {
+                    Ok(rows) => {    let mut iter = rows.iter();
+                                     while let Some(row) = iter.next() {
+                                         self._label = Some(row.get("label"));
+                                         self._level = Some(row.get("level"));
+                                         self._drop = Some(row.get("drop"));
 
-                                 println!("{:?}",self._drop);
-                             }
+                                         println!("{:?}",self._drop);
+                                     }
 
-                             trans.commit().unwrap();
-                             return Ok(());
+                                     trans.commit().unwrap();
+                                     return Ok(());
+                    },
+                    Err(er) =>  {
+                        trans.commit().unwrap();
+                        return Err(er);
+                    }
+                }
+
+
             },
-            Err(er) =>  {
-                trans.commit().unwrap();
-                return Err(er);
+            GetBossBy::LABEL => {
+                let statement = trans.prepare("SELECT * FROM bosses WHERE label=$1;").unwrap();
+                match statement.query(&[&self._label]) {
+                    Ok(rows) => {    let mut iter = rows.iter();
+                                     while let Some(row) = iter.next() {
+                                         self._id = Some(row.get("id"));
+                                         self._level = Some(row.get("level"));
+                                         self._drop = Some(row.get("drop"));
+
+                                         println!("{:?}",self._drop);
+                                     }
+
+                                     trans.commit().unwrap();
+                                     return Ok(());
+                    },
+                    Err(er) =>  {
+                        trans.commit().unwrap();
+                        return Err(er);
+                    }
+                }
+            },
+            _ => { println!("cant decide command context (GetBossBy::LABEL or GetBossBy::ID)");
+                   return Ok(());
             }
         }
     }
+
+    // pub fn getData(&self) -> &LinkedList<String> {
+    //     return &self._bosses;
+    // }
 }
-
-
 
 pub struct PostgresGetBosses {
     _bosses: LinkedList<String>
