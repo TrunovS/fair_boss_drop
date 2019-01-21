@@ -51,8 +51,8 @@ pub fn get_boss(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<R
                                           "couldn't convert records to JSON")));
             }
         },
-        Err(er) => { println!("{}",er);
-                     return Ok(Response::with((status::InternalServerError, er)));
+        Err(er) => { let err_mes = format!("{}",er);
+                     return Ok(Response::with((status::InternalServerError, err_mes)));
         }
     }
 }
