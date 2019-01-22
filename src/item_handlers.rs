@@ -25,7 +25,7 @@ pub fn get_item_types(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronRe
                                           "couldn't convert records to JSON")));
             }
         },
-        Err(er) => { let err_mes = format!("get boss command execute error {}",er);
+        Err(er) => { let err_mes = format!("get item_types command execute error {}",er);
                      return Ok(Response::with((status::InternalServerError, err_mes)));
         }
     }

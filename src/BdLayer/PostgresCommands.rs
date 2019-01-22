@@ -28,7 +28,7 @@ END $$;
 
             CREATE TABLE IF NOT EXISTS items (
             id SERIAL PRIMARY KEY,
-            label VARCHAR NOT NULL,
+            label VARCHAR NOT NULL UNIQUE,
             type SERIAL REFERENCES item_types (id),
             equals item_quantity[]
             );
