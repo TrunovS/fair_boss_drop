@@ -19,7 +19,7 @@ impl ItemProbability {
     }
 }
 
-
+#[derive(Serialize, Deserialize)]
 pub struct PostgresGetItemTypes {
     _items: LinkedList<String>,
 }
@@ -27,10 +27,6 @@ pub struct PostgresGetItemTypes {
 impl PostgresGetItemTypes {
     pub fn new() -> PostgresGetItemTypes {
         PostgresGetItemTypes { _items: LinkedList::new() }
-    }
-
-    pub fn getData(&self) -> &LinkedList<String> {
-        return &self._items;
     }
 }
 

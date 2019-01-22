@@ -6,6 +6,7 @@ use std::sync::Mutex;
 
 use BdLayer::ItemsCommands::*;
 use BdLayer::PostgresDealer::*;
+use fair_boss_drop_server::serde_json;
 
 
 pub fn get_item_types(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<Response> {
@@ -13,10 +14,21 @@ pub fn get_item_types(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronRe
 
     let mut get_item_types = PostgresGetItemTypes::new();
     match bd_data.doCommand(&mut get_item_types) {
-        Ok(res) => {  println!("get item types"); },
-        Err(er) => {  println!("{}",er); }
+        Ok(res) => {
+            println!("get item_types");
+            if let Ok(json) = serde_json::to_string(&get_item_types) {
+                let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
+                return Ok(Response::with((content_type, status::Ok, json)));
+            }
+            else {
+                return Ok(Response::with((status::InternalServerError,
+                                          "couldn't convert records to JSON")));
+            }
+        },
+        Err(er) => { let err_mes = format!("get boss command execute error {}",er);
+                     return Ok(Response::with((status::InternalServerError, err_mes)));
+        }
     }
-    println!("start {:?}",get_item_types.getData());
 
     Ok(Response::with((status::Ok,"Get Item Types executed")))
 }
