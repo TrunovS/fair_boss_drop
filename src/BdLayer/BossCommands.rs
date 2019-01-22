@@ -2,7 +2,6 @@ use BdLayer::PostgresDealer::PostgresCommand;
 use ::postgres::{Connection, error::Error};
 use std::collections::LinkedList;
 use BdLayer::ItemsCommands::ItemProbability;
-use ::serde_derive;
 
 #[derive(Serialize, Deserialize)]
 enum GetBossBy {
@@ -13,7 +12,7 @@ enum GetBossBy {
 
 #[derive(Serialize, Deserialize)]
 pub struct PostgresGetBoss {
-    _id: Option<u32>,
+    _id: Option<i32>,
     _label: Option<String>,
     _level: Option<i32>,
     _drop: Option<Vec<ItemProbability>>,
@@ -30,7 +29,7 @@ impl PostgresGetBoss {
         self._opt = GetBossBy::LABEL;
         self
     }
-    pub fn with_id(mut self,id: u32) -> PostgresGetBoss {
+    pub fn with_id(mut self,id: i32) -> PostgresGetBoss {
         self._label = None;
         self._id = Some(id);
         self._opt = GetBossBy::ID;

@@ -7,7 +7,7 @@ use std::sync::Mutex;
 use BdLayer::BossCommands::*;
 use BdLayer::PostgresDealer::*;
 use BdLayer::ItemsCommands::ItemProbability;
-use ::{serde_derive, serde, serde_json};
+use fair_boss_drop_server::serde_json;
 
 pub fn insert_boss(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<Response> {
     let mut bd_data = sdb.lock().unwrap();
@@ -51,7 +51,7 @@ pub fn get_boss(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<R
                                           "couldn't convert records to JSON")));
             }
         },
-        Err(er) => { let err_mes = format!("{}",er);
+        Err(er) => { let err_mes = format!("get boss command execute error {}",er);
                      return Ok(Response::with((status::InternalServerError, err_mes)));
         }
     }
