@@ -90,22 +90,16 @@ impl PostgresCommand for PostgresGetBoss {
             }
         }
     }
-
-    // pub fn getData(&self) -> &LinkedList<String> {
-    //     return &self._bosses;
-    // }
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct PostgresGetBosses {
-    _bosses: LinkedList<String>
+    _bosses: Vec<String>
 }
 
 impl PostgresGetBosses {
     pub fn new() -> PostgresGetBosses {
-        PostgresGetBosses { _bosses: LinkedList::new() }
-    }
-    pub fn getData(&self) -> &LinkedList<String> {
-        return &self._bosses;
+        PostgresGetBosses { _bosses: Vec::new() }
     }
 }
 
@@ -114,13 +108,15 @@ impl PostgresCommand for PostgresGetBosses {
         let trans = connect.transaction().unwrap();
         let statement = trans.prepare("SELECT id, label FROM bosses ORDER BY id ASC;").unwrap();
         match statement.query(&[]) {
-            Ok(rows) => {    let mut iter = rows.iter();
-                             while let Some(row) = iter.next() {
-                                 self._bosses.push_back(row.get("label"));
-                             }
+            Ok(rows) => {  self._bosses.reserve(rows.len());
+                           let mut iter = rows.iter();
+                           while let Some(row) = iter.next() {
+                               let var: String = row.get("label");
+                               self._bosses.push(var);
+                           }
 
-                             trans.commit().unwrap();
-                             return Ok(());
+                           trans.commit().unwrap();
+                           return Ok(());
             },
             Err(er) =>  {
                 trans.commit().unwrap();

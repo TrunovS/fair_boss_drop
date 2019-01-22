@@ -62,27 +62,19 @@ pub fn get_bosses(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult
 
     let mut get_bosses = PostgresGetBosses::new();
     match bd_data.doCommand(&mut get_bosses) {
-        Ok(res) => {  println!("get bosses");
-                      println!("Bosses {:?}",get_bosses.getData());
+        Ok(res) => {
+            println!("get bosses");
+            if let Ok(json) = serde_json::to_string(&get_bosses) {
+                let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
+                return Ok(Response::with((content_type, status::Ok, json)));
+            }
+            else {
+                return Ok(Response::with((status::InternalServerError,
+                                          "couldn't convert records to JSON")));
+            }
         },
-        Err(er) => {  println!("{}",er); }
+        Err(er) => { let err_mes = format!("get bosses command execute error {}",er);
+                     return Ok(Response::with((status::InternalServerError, err_mes)));
+        }
     }
-
-    Ok(Response::with((status::Ok,"Command executed")))
-
-    // let json_record;
-    // if let Ok(recs) = ::db::read_one(sdb, id) {
-    //     if let Ok(json) = json::encode(&recs) {
-    //         json_record = Some(json);
-    //     } else {
-    //         return Ok(Response::with((status::InternalServerError,
-    //                                   "couldn't convert records to JSON")));
-    //     }
-    // } else {
-    //     return Ok(Response::with((status::InternalServerError,
-    //                               "couldn't read records from database")));
-    // }
-    // let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
-
-    // Ok(Response::with((content_type, status::Ok, json_record.unwrap())))
 }
