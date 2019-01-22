@@ -20,10 +20,9 @@ pub fn get_item_types(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronRe
                 let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
                 return Ok(Response::with((content_type, status::Ok, json)));
             }
-            else {
-                return Ok(Response::with((status::InternalServerError,
-                                          "couldn't convert records to JSON")));
-            }
+
+            return Ok(Response::with((status::InternalServerError,
+                                      "couldn't convert records to JSON")));
         },
         Err(er) => { let err_mes = format!("get item_types command execute error {}",er);
                      return Ok(Response::with((status::InternalServerError, err_mes)));

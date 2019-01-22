@@ -46,10 +46,9 @@ pub fn get_boss(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<R
                 let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
                 return Ok(Response::with((content_type, status::Ok, json)));
             }
-            else {
-                return Ok(Response::with((status::InternalServerError,
-                                          "couldn't convert records to JSON")));
-            }
+
+            return Ok(Response::with((status::InternalServerError,
+                                      "couldn't convert records to JSON")));
         },
         Err(er) => { let err_mes = format!("get boss command execute error {}",er);
                      return Ok(Response::with((status::InternalServerError, err_mes)));
@@ -68,10 +67,9 @@ pub fn get_bosses(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult
                 let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
                 return Ok(Response::with((content_type, status::Ok, json)));
             }
-            else {
-                return Ok(Response::with((status::InternalServerError,
-                                          "couldn't convert records to JSON")));
-            }
+
+            return Ok(Response::with((status::InternalServerError,
+                                      "couldn't convert records to JSON")));
         },
         Err(er) => { let err_mes = format!("get bosses command execute error {}",er);
                      return Ok(Response::with((status::InternalServerError, err_mes)));
