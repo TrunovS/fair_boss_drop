@@ -43,10 +43,7 @@ impl PostgresCommand for PostgresGetItemTypes {
                              trans.commit().unwrap();
                              return Ok(());
             },
-            Err(er) =>  {
-                trans.commit().unwrap();
-                return Err(er);
-            }
+            Err(er) =>  return Err(er);
         }
     }
 }
@@ -71,10 +68,7 @@ impl PostgresCommand for PostgresInsertItemType {
             Ok(rows) => {    trans.commit().unwrap();
                              return Ok(());
             },
-            Err(er) =>  {
-                trans.commit().unwrap();
-                return Err(er);
-            }
+            Err(er) =>  return Err(er);
         }
     }
 }

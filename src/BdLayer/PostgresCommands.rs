@@ -49,9 +49,12 @@ END $$;
             drop item_probability[]
             );
            ");
-        trans.commit().unwrap();
+
         match res {
-            Ok(var) => return Ok(()),
+            Ok(var) => {
+                trans.commit().unwrap();
+                return Ok(())
+            },
             Err(er) => return Err(er),
         };
     }
