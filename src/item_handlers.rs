@@ -28,17 +28,24 @@ pub fn get_item_types(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronRe
                      return Ok(Response::with((status::InternalServerError, err_mes)));
         }
     }
-
-    Ok(Response::with((status::Ok,"Get Item Types executed")))
 }
 
 pub fn insert_item_type(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<Response> {
     let mut bd_data = sdb.lock().unwrap();
 
-    let mut add_item_type = PostgresInsertItemType::new("tip1");
+    let mut body = String::new();
+    req.body.read_to_string(&mut body)
+        .map_err(|er| return Ok(Response::with((status::InternalServerError,
+                                                "couldn't read request body"))))
+        .unwrap();
+
+    let mut add_item_type: PostgresInsertItemType = serde_json::from_str(&body)
+        .map_err(|er| return Ok(Response::with((status::InternalServerError,
+                                                "couldn't convert records to JSON"))))
+        .unwrap();
+
     match bd_data.doCommand(&mut add_item_type) {
         Ok(res) => {  println!("item added"); },
         Err(er) => {  println!("{}",er); }
     };
-    Ok(Response::with((status::Ok,"insert item type executed")))
 }

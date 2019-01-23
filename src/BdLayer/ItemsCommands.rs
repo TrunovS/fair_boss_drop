@@ -19,7 +19,7 @@ impl ItemProbability {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize)]
 pub struct PostgresGetItemTypes {
     _items: LinkedList<String>,
 }
@@ -48,6 +48,7 @@ impl PostgresCommand for PostgresGetItemTypes {
     }
 }
 
+#[derive(Deserialize)]
 pub struct PostgresInsertItemType {
     _label: String,
 }
