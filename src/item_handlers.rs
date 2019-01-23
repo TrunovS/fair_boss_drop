@@ -34,18 +34,26 @@ pub fn insert_item_type(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> Iron
     let mut bd_data = sdb.lock().unwrap();
 
     let mut body = String::new();
-    req.body.read_to_string(&mut body)
-        .map_err(|er| return Ok(Response::with((status::InternalServerError,
-                                                "couldn't read request body"))))
-        .unwrap();
+    if let Err(er) = req.body.read_to_string(&mut body) {
+        return Ok(Response::with((status::InternalServerError,
+                                  "couldn't read request body")));
+    }
 
-    let mut add_item_type: PostgresInsertItemType = serde_json::from_str(&body)
-        .map_err(|er| return Ok(Response::with((status::InternalServerError,
-                                                "couldn't convert records to JSON"))))
-        .unwrap();
+    let mut add_item_type: PostgresInsertItemType = serde_json::from_str(&body).unwrap();
+    let mut commands: Vec<Box<PostgresCommand>> = vec![Box::new(add_item_type),Box::new(PostgresGetItemTypes::new())];
 
-    match bd_data.doCommand(&mut add_item_type) {
-        Ok(res) => {  println!("item added"); },
-        Err(er) => {  println!("{}",er); }
-    };
+    if let Err(er) = bd_data.doCommands(&mut commands) {
+        let err_mes = format!("insert item_type command execute error {}",er);
+        return Ok(Response::with((status::InternalServerError, err_mes)));
+    }
+
+    let mut get_item_types = commands.pop().unwrap();
+
+    if let Ok(json) = serde_json::to_string(&get_item_types) {
+        let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
+        return Ok(Response::with((content_type, status::Ok, json)));
+    }
+
+    return Ok(Response::with((status::InternalServerError,
+                              "couldn't convert records to JSON")));
 }

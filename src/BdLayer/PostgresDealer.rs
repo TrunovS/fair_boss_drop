@@ -1,4 +1,4 @@
-use ::postgres::Connection;
+use ::postgres::{Connection,transaction::Transaction};
 use ::postgres::error::Error;
 use BdLayer::Settings;
 
@@ -16,7 +16,7 @@ impl PostgresSqlData {
 }
 
 pub trait PostgresCommand {
-    fn execute(&mut self, connect: &Connection) -> Result<(), Error> where Self: Sized;
+    fn execute(&mut self, transaction: &Transaction) -> Result<(), Error> where Self: Sized;
 }
 
 pub trait PostgresDealer {
@@ -32,6 +32,9 @@ pub trait PostgresDealer {
 
     /// Выполнить комманду
     fn doCommand<T: PostgresCommand>(&mut self, command: &mut T) -> Result<(),Error>;
+
+    fn doCommands<T: PostgresCommand>(&mut self, commands: &mut Vec<Box<T>>) -> Result<(),Error>
+    where T: Sized;
 }
 
 impl PostgresDealer for PostgresSqlData
@@ -84,12 +87,33 @@ impl PostgresDealer for PostgresSqlData
 
     /// Выполнить комманду
     fn doCommand<T: PostgresCommand>(&mut self, command: &mut T) -> Result<(),Error> {
+        match &mut self._connection {
+            Some(ref mut c) => { let trans = c.transaction().unwrap();
+                                 return command.execute(&trans);
+            },
+            None => panic!("Trying to exec command to BD when there are no connection")
+        };
+    }
+
+    /// Выполнить комманды в одну трансзакцию.
+    fn doCommands<T: PostgresCommand>(&mut self, commands: &mut Vec<Box<T>>) -> Result<(),Error>
+    where T: Sized
+    {
         if self.isOpen() == false {
             panic!("no connect to Bd");
         }
 
         match &mut self._connection {
-            Some(ref mut c) => return command.execute(c),
+            Some(ref mut c) => {
+                let trans = c.transaction().unwrap();
+
+                for command in commands.iter_mut() {
+                    if let Err(er) = command.execute(&trans) {
+                        return Err(er);
+                    }
+                }
+                return Ok(());
+            },
             None => panic!("Trying to exec command to BD when there are no connection")
         };
     }

@@ -1,21 +1,22 @@
 use BdLayer::PostgresDealer::PostgresCommand;
-use ::postgres::{Connection, error::Error};
+use ::postgres::{transaction::Transaction, error::Error};
 use std::collections::LinkedList;
 use BdLayer::ItemsCommands::ItemProbability;
 
-#[derive(Serialize, Deserialize)]
 enum GetBossBy {
     ID,
     LABEL,
     NONE
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize)]
 pub struct PostgresGetBoss {
     _id: Option<i32>,
     _label: Option<String>,
     _level: Option<i32>,
     _drop: Option<Vec<ItemProbability>>,
+
+    #[serde(skip_serializing)]
     _opt: GetBossBy,
 }
 
@@ -38,7 +39,7 @@ impl PostgresGetBoss {
 }
 
 impl PostgresCommand for PostgresGetBoss {
-    fn execute(&mut self,connect: &Connection) -> Result<(),Error> {
+    fn execute(&mut self,connect: &Transaction) -> Result<(),Error> {
         let trans = connect.transaction().unwrap();
         match &self._opt {
             GetBossBy::ID => {
@@ -56,7 +57,7 @@ impl PostgresCommand for PostgresGetBoss {
                                      trans.commit().unwrap();
                                      return Ok(());
                     },
-                    Err(er) =>  return Err(er);
+                    Err(er) =>  Err(er)
                 }
 
 
@@ -76,7 +77,7 @@ impl PostgresCommand for PostgresGetBoss {
                                      trans.commit().unwrap();
                                      return Ok(());
                     },
-                    Err(er) =>  return Err(er);
+                    Err(er) =>  Err(er)
                 }
             },
             _ => { println!("cant decide command context (GetBossBy::LABEL or GetBossBy::ID)");
@@ -86,7 +87,7 @@ impl PostgresCommand for PostgresGetBoss {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize)]
 pub struct PostgresGetBosses {
     _bosses: Vec<String>
 }
@@ -98,7 +99,7 @@ impl PostgresGetBosses {
 }
 
 impl PostgresCommand for PostgresGetBosses {
-    fn execute(&mut self,connect: &Connection) -> Result<(),Error> {
+    fn execute(&mut self,connect: &Transaction) -> Result<(),Error> {
         let trans = connect.transaction().unwrap();
         let statement = trans.prepare("SELECT id, label FROM bosses ORDER BY id ASC;").unwrap();
         match statement.query(&[]) {
@@ -112,7 +113,7 @@ impl PostgresCommand for PostgresGetBosses {
                            trans.commit().unwrap();
                            return Ok(());
             },
-            Err(er) =>  return Err(er);
+            Err(er) =>  Err(er)
         }
     }
 }
@@ -130,7 +131,7 @@ impl PostgresInsertBoss {
 }
 
 impl PostgresCommand for PostgresInsertBoss {
-    fn execute(&mut self,connect: &Connection) -> Result<(),Error> {
+    fn execute(&mut self,connect: &Transaction) -> Result<(),Error> {
         let trans = connect.transaction().unwrap();
 
         let statement = trans.prepare("INSERT INTO bosses VALUES(default, $1, $2, $3);").unwrap();
@@ -139,7 +140,7 @@ impl PostgresCommand for PostgresInsertBoss {
             Ok(rows) => {    trans.commit().unwrap();
                              return Ok(());
             },
-            Err(er) =>  return Err(er);
+            Err(er) =>  Err(er)
         }
     }
 }

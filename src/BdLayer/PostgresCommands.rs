@@ -1,5 +1,5 @@
 use BdLayer::PostgresDealer::PostgresCommand;
-use ::postgres::{Connection, error::Error};
+use ::postgres::{transaction::Transaction, error::Error};
 
 pub struct PostgresInitTables;
 impl PostgresInitTables {
@@ -9,9 +9,9 @@ impl PostgresInitTables {
 }
 
 impl PostgresCommand for PostgresInitTables {
-    fn execute(&mut self,connect: &Connection) -> Result<(),Error> {
-        let trans = connect.transaction().unwrap();
-        let res = trans.batch_execute("
+    fn execute(&mut self,transaction: &Transaction) -> Result<(),Error> {
+        let nest_trans = transaction.transaction().unwrap();
+        let res = nest_trans.batch_execute("
             CREATE TABLE IF NOT EXISTS item_types (
             id SERIAL PRIMARY KEY,
             label VARCHAR NOT NULL UNIQUE
@@ -52,7 +52,7 @@ END $$;
 
         match res {
             Ok(var) => {
-                trans.commit().unwrap();
+                nest_trans.commit().unwrap();
                 return Ok(())
             },
             Err(er) => return Err(er),
