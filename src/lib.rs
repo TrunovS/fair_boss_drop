@@ -11,4 +11,8 @@ extern crate serde_derive;
 extern crate serde;
 pub extern crate serde_json;
 
+#[macro_use]
+pub extern crate downcast_rs;
+
+
 pub mod BdLayer;

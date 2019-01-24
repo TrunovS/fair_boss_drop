@@ -1,5 +1,7 @@
 use ::postgres::{Connection,transaction::Transaction};
 use ::postgres::error::Error;
+use ::downcast_rs::Downcast;
+
 use BdLayer::Settings;
 
 
@@ -15,9 +17,10 @@ impl PostgresSqlData {
     }
 }
 
-pub trait PostgresCommand {
-    fn execute(&mut self, transaction: &Transaction) -> Result<(), Error> where Self: Sized;
+pub trait PostgresCommand: Downcast {
+    fn execute(&mut self, transaction: &Transaction) -> Result<(), Error>;
 }
+impl_downcast!(PostgresCommand);
 
 pub trait PostgresDealer {
 
@@ -31,10 +34,9 @@ pub trait PostgresDealer {
     fn isOpen(&self) -> bool;
 
     /// Выполнить комманду
-    fn doCommand<T: PostgresCommand>(&mut self, command: &mut T) -> Result<(),Error>;
+    fn doCommand<T: PostgresCommand+?Sized>(&mut self, command: &mut T) -> Result<(),Error>;
 
-    fn doCommands<T: PostgresCommand>(&mut self, commands: &mut Vec<Box<T>>) -> Result<(),Error>
-    where T: Sized;
+    fn doCommands<T: PostgresCommand+?Sized>(&mut self, commands: &mut Vec<Box<T>>) -> Result<(),Error>;
 }
 
 impl PostgresDealer for PostgresSqlData
@@ -86,18 +88,21 @@ impl PostgresDealer for PostgresSqlData
     }
 
     /// Выполнить комманду
-    fn doCommand<T: PostgresCommand>(&mut self, command: &mut T) -> Result<(),Error> {
+    fn doCommand<T: PostgresCommand+?Sized>(&mut self, command: &mut T) -> Result<(),Error> {
         match &mut self._connection {
             Some(ref mut c) => { let trans = c.transaction().unwrap();
-                                 return command.execute(&trans);
+                                 if let Err(er) = command.execute(&trans) {
+                                     return Err(er);
+                                 }
+                                 trans.commit().unwrap();
+                                 return Ok(());
             },
             None => panic!("Trying to exec command to BD when there are no connection")
         };
     }
 
     /// Выполнить комманды в одну трансзакцию.
-    fn doCommands<T: PostgresCommand>(&mut self, commands: &mut Vec<Box<T>>) -> Result<(),Error>
-    where T: Sized
+    fn doCommands<T: PostgresCommand+?Sized>(&mut self, commands: &mut Vec<Box<T>>) -> Result<(),Error>
     {
         if self.isOpen() == false {
             panic!("no connect to Bd");
@@ -112,6 +117,8 @@ impl PostgresDealer for PostgresSqlData
                         return Err(er);
                     }
                 }
+                trans.commit().unwrap();
+
                 return Ok(());
             },
             None => panic!("Trying to exec command to BD when there are no connection")

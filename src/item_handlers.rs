@@ -3,6 +3,7 @@ use iron::mime::{Mime, TopLevel, SubLevel};
 
 use std::io::Read;
 use std::sync::Mutex;
+use std::any::Any;
 
 use BdLayer::ItemsCommands::*;
 use BdLayer::PostgresDealer::*;
@@ -48,11 +49,13 @@ pub fn insert_item_type(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> Iron
         return Ok(Response::with((status::InternalServerError, err_mes)));
     }
 
-    let mut get_item_types = commands.pop().unwrap();
-
-    if let Ok(json) = serde_json::to_string(&get_item_types) {
-        let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
-        return Ok(Response::with((content_type, status::Ok, json)));
+    let mut bget_item_types = commands.pop().unwrap();
+    let mut aget = Box::leak(bget_item_types);
+    if let Some(get_item_types) = aget.downcast_mut::<PostgresGetItemTypes>() {
+        if let Ok(json) = serde_json::to_string(get_item_types) {
+            let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
+            return Ok(Response::with((content_type, status::Ok, json)));
+        }
     }
 
     return Ok(Response::with((status::InternalServerError,
