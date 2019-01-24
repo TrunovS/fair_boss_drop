@@ -21,7 +21,7 @@ impl ItemProbability {
 
 #[derive(Serialize)]
 pub struct PostgresGetItemTypes {
-    _items: LinkedList<String>,
+    _items: LinkedList<(i32,String)>,
 }
 
 impl PostgresGetItemTypes {
@@ -39,7 +39,8 @@ impl PostgresCommand for PostgresGetItemTypes {
         match statement.query(&[]) {
             Ok(rows) => {    let mut iter = rows.iter();
                              while let Some(row) = iter.next() {
-                                 self._items.push_back(row.get("label"));
+                                 let item = (row.get("id"),row.get("label"));
+                                 self._items.push_back(item);
                              }
 
                              nest_trans.commit().unwrap();
