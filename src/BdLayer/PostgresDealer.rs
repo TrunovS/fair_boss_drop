@@ -36,6 +36,7 @@ pub trait PostgresDealer {
     /// Выполнить комманду
     fn doCommand<T: PostgresCommand+?Sized>(&mut self, command: &mut T) -> Result<(),Error>;
 
+    /// Выполнить комманды в одну трансзакцию.
     fn doCommands<T: PostgresCommand+?Sized>(&mut self, commands: &mut Vec<Box<T>>) -> Result<(),Error>;
 }
 
@@ -102,12 +103,7 @@ impl PostgresDealer for PostgresSqlData
     }
 
     /// Выполнить комманды в одну трансзакцию.
-    fn doCommands<T: PostgresCommand+?Sized>(&mut self, commands: &mut Vec<Box<T>>) -> Result<(),Error>
-    {
-        if self.isOpen() == false {
-            panic!("no connect to Bd");
-        }
-
+    fn doCommands<T: PostgresCommand+?Sized>(&mut self, commands: &mut Vec<Box<T>>) -> Result<(),Error> {
         match &mut self._connection {
             Some(ref mut c) => {
                 let trans = c.transaction().unwrap();
