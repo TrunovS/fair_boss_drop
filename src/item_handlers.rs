@@ -40,7 +40,7 @@ pub fn insert_item_type(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> Iron
                                   "couldn't read request body")));
     }
 
-    let mut add_item_type: PostgresInsertItemType = serde_json::from_str(&body).unwrap();
+    let mut add_item_type: PostgresInsertItemType = serde_json::from_str(&body).expect("can't parse body");
     let mut commands: Vec<Box<PostgresCommand>> = vec![Box::new(add_item_type),
                                                        Box::new(PostgresGetItemTypes::new())];
 
@@ -94,9 +94,8 @@ pub fn insert_item(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResul
                                   "couldn't read request body")));
     }
 
-    // let mut add_item: PostgresInsertItem = serde_json::from_str(&body).expect("can't parse body");
-    let mut add_item: PostgresInsertItem = PostgresInsertItem::new("item5",11,None);
-    let mut commands: Vec<Box<PostgresCommand>> = vec![Box::new(add_item),
+    let mut add_item: PostgresInsertItem = serde_json::from_str(&body).expect("can't parse body");
+    let mut commands: Vec<Box<PostgresCommand>> = vec![Box::new(add_item.make_valid()),
                                                        Box::new(PostgresGetItems::new())];
 
     if let Err(er) = bd_data.doCommands(&mut commands) {
@@ -111,8 +110,9 @@ pub fn insert_item(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResul
             let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
             return Ok(Response::with((content_type, status::Ok, json)));
         }
+        return Ok(Response::with((status::InternalServerError,
+                                  "couldn't convert records to JSON")));
     }
 
-    return Ok(Response::with((status::InternalServerError,
-                              "couldn't convert records to JSON")));
+    panic!("couldn't downcast PostgresGetItems");
 }

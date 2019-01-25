@@ -30,7 +30,7 @@ END $$;
             id SERIAL PRIMARY KEY,
             label VARCHAR NOT NULL UNIQUE,
             type SERIAL REFERENCES item_types (id),
-            changable BOOL,
+            exchangable BOOL,
             equals REAL
             );
 

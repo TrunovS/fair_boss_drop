@@ -90,6 +90,7 @@ struct ItemRow {
     _id: i32,
     _label: String,
     _type: i32,
+    _exchangable: bool,
     _equals: f32
 }
 
@@ -116,6 +117,7 @@ impl PostgresCommand for PostgresGetItems {
                               let item = ItemRow { _id: row.get("id"),
                                                    _label: row.get("label"),
                                                    _type: row.get("type"),
+                                                   _exchangable: row.get("exchangable"),
                                                    _equals: row.get("equals") };
                               self._items.push_back(item);
                           }
@@ -134,24 +136,29 @@ impl PostgresCommand for PostgresGetItems {
 pub struct PostgresInsertItem {
     _label: String,
     _type: i32,
-    _equals: Option<f32>
+    _exchangable: bool,
+    _equals: f32
 }
 
 impl PostgresInsertItem {
-    pub fn new(label: &str,itype: i32,equals: Option<f32>) -> PostgresInsertItem {
-        PostgresInsertItem { _label: String::from(label),
-                              _type: itype,
-                              _equals: equals }
+    pub fn make_valid(mut self) -> PostgresInsertItem {
+        if !self._exchangable {
+            self._equals = 0.0;
+        }
+
+        self
     }
 }
+
 
 impl PostgresCommand for PostgresInsertItem {
     fn execute(&mut self,transaction: &Transaction) -> Result<(),Error> {
         let nest_trans = transaction.transaction().unwrap();
-        let statement = nest_trans.prepare("INSERT INTO items VALUES(default, $1, $2, $3);")
+        let statement = nest_trans.prepare("INSERT INTO items VALUES(default, $1, $2, $3, $4);")
             .unwrap();
 
-        match statement.query(&[&self._label, &self._type, &self._equals]) {
+        match statement.query(&[&self._label, &self._type,
+                                &self._exchangable, &self._equals]) {
             Ok(rows) => {    nest_trans.commit().unwrap();
                              return Ok(());
             },
