@@ -21,15 +21,21 @@ fn serve(db: PostgresSqlData) {
     {   let sdb_ = sdb.clone();
         router.get("/api/v0/itemtypes", move |req: &mut Request|
                    item_handlers::get_item_types(&sdb_.clone(), req), "get_all_item_types"); }
-
     {   let sdb_ = sdb.clone();
         router.post("/api/v0/itemtypes", move |req: &mut Request|
                    item_handlers::insert_item_type(&sdb_.clone(), req), "insert_into_item_types"); }
 
     {   let sdb_ = sdb.clone();
+        router.get("/api/v0/items", move |req: &mut Request|
+                   item_handlers::get_items(&sdb_.clone(), req), "get_all_items"); }
+    {   let sdb_ = sdb.clone();
+        router.post("/api/v0/items", move |req: &mut Request|
+                   item_handlers::insert_item(&sdb_.clone(), req), "insert_into_items"); }
+
+
+    {   let sdb_ = sdb.clone();
         router.get("/api/v0/bosses", move |req: &mut Request|
                    boss_handlers::get_bosses(&sdb_.clone(), req), "get_all_bosses");    }
-
     {   let sdb_ = sdb.clone();
         router.get("/api/v0/bosses/:id", move |req: &mut Request|
                    boss_handlers::get_boss(&sdb_.clone(), req), "get_boss");    }

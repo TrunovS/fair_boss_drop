@@ -30,7 +30,8 @@ END $$;
             id SERIAL PRIMARY KEY,
             label VARCHAR NOT NULL UNIQUE,
             type SERIAL REFERENCES item_types (id),
-            equals item_quantity[]
+            changable BOOL,
+            equals REAL
             );
 
 DO $$ BEGIN

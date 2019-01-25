@@ -61,3 +61,58 @@ pub fn insert_item_type(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> Iron
     return Ok(Response::with((status::InternalServerError,
                               "couldn't convert records to JSON")));
 }
+
+
+
+pub fn get_items(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<Response> {
+    let mut bd_data = sdb.lock().unwrap();
+
+    let mut get_items = PostgresGetItems::new();
+    match bd_data.doCommand(&mut get_items) {
+        Ok(res) => {
+            println!("get items");
+            if let Ok(json) = serde_json::to_string(&get_items) {
+                let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
+                return Ok(Response::with((content_type, status::Ok, json)));
+            }
+
+            return Ok(Response::with((status::InternalServerError,
+                                      "couldn't convert records to JSON")));
+        },
+        Err(er) => { let err_mes = format!("get items command execute error {}",er);
+                     return Ok(Response::with((status::InternalServerError, err_mes)));
+        }
+    }
+}
+
+pub fn insert_item(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<Response> {
+    let mut bd_data = sdb.lock().unwrap();
+
+    let mut body = String::new();
+    if let Err(er) = req.body.read_to_string(&mut body) {
+        return Ok(Response::with((status::InternalServerError,
+                                  "couldn't read request body")));
+    }
+
+    // let mut add_item: PostgresInsertItem = serde_json::from_str(&body).expect("can't parse body");
+    let mut add_item: PostgresInsertItem = PostgresInsertItem::new("item5",11,None);
+    let mut commands: Vec<Box<PostgresCommand>> = vec![Box::new(add_item),
+                                                       Box::new(PostgresGetItems::new())];
+
+    if let Err(er) = bd_data.doCommands(&mut commands) {
+        let err_mes = format!("insert item command execute error {}",er);
+        return Ok(Response::with((status::InternalServerError, err_mes)));
+    }
+
+    let mut bget_item_types = commands.pop().unwrap();
+    let mut aget = Box::leak(bget_item_types);
+    if let Some(get_item_types) = aget.downcast_mut::<PostgresGetItems>() {
+        if let Ok(json) = serde_json::to_string(get_item_types) {
+            let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
+            return Ok(Response::with((content_type, status::Ok, json)));
+        }
+    }
+
+    return Ok(Response::with((status::InternalServerError,
+                              "couldn't convert records to JSON")));
+}
