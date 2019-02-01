@@ -94,6 +94,57 @@ struct ItemRow {
     _equals: f32
 }
 
+
+#[derive(Serialize)]
+pub struct PostgresGetItem {
+    #[serde(skip_serializing)]
+    _id: i32,
+    _item: Option<ItemRow>,
+}
+
+impl PostgresGetItem {
+    pub fn new() -> PostgresGetItem {
+        PostgresGetItem { _id: 0, _item: None }
+    }
+    pub fn with_id(mut self,id: i32) -> PostgresGetItem {
+        self._id = id;
+        self
+    }
+    pub fn isFound(&self) -> bool {
+        if let Some(ref r) = self._item {
+            return true;
+        }
+        return false;
+    }
+}
+
+impl PostgresCommand for PostgresGetItem {
+    fn execute(&mut self,transaction: &Transaction) -> Result<(),Error> {
+        let nest_trans = transaction.transaction().unwrap();
+        let statement = nest_trans.prepare("SELECT * FROM items where id=$1;")
+            .unwrap();
+
+        match statement.query(&[&self._id]) {
+            Ok(rows) => { let mut iter = rows.iter();
+                          while let Some(row) = iter.next() {
+                              let item = ItemRow { _id: row.get("id"),
+                                                   _label: row.get("label"),
+                                                   _type: row.get("type"),
+                                                   _exchangable: row.get("exchangable"),
+                                                   _equals: row.get("equals") };
+                              self._item = Some(item);
+                          }
+
+                          nest_trans.commit().unwrap();
+                          return Ok(());
+            },
+            Err(er) =>  Err(er)
+        }
+    }
+}
+
+
+
 #[derive(Serialize)]
 pub struct PostgresGetItems {
     _items: LinkedList<ItemRow>,

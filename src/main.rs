@@ -29,9 +29,11 @@ fn serve(db: PostgresSqlData) {
         router.get("/api/v0/items", move |req: &mut Request|
                    item_handlers::get_items(&sdb_.clone(), req), "get_all_items"); }
     {   let sdb_ = sdb.clone();
+        router.get("/api/v0/items/:id", move |req: &mut Request|
+                    item_handlers::get_item(&sdb_.clone(), req), "get_item"); }
+    {   let sdb_ = sdb.clone();
         router.post("/api/v0/items", move |req: &mut Request|
-                   item_handlers::insert_item(&sdb_.clone(), req), "insert_into_items"); }
-
+                    item_handlers::insert_item(&sdb_.clone(), req), "insert_into_items"); }
 
     {   let sdb_ = sdb.clone();
         router.get("/api/v0/bosses", move |req: &mut Request|
