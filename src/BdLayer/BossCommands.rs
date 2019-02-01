@@ -10,19 +10,23 @@ enum GetBossBy {
 }
 
 #[derive(Serialize)]
+pub struct BossRow {
+    _id: i32,
+    _label: String,
+    _level: i32,
+    _drop: Vec<ItemProbability>,
+}
+
 pub struct PostgresGetBoss {
+    _boss: Option<BossRow>,
     _id: Option<i32>,
     _label: Option<String>,
-    _level: Option<i32>,
-    _drop: Option<Vec<ItemProbability>>,
-
-    #[serde(skip_serializing)]
     _opt: GetBossBy,
 }
 
 impl PostgresGetBoss {
     pub fn new() -> PostgresGetBoss {
-        PostgresGetBoss { _id: None, _label: None, _level: None, _drop: None, _opt: GetBossBy::NONE }
+        PostgresGetBoss { _boss: None, _label: None, _id: None, _opt: GetBossBy::NONE }
     }
     pub fn with_label(mut self,label: &str) -> PostgresGetBoss {
         self._label = Some(String::from(label));
@@ -36,6 +40,9 @@ impl PostgresGetBoss {
         self._opt = GetBossBy::ID;
         self
     }
+    pub fn getBoss(&self) -> &Option<BossRow> {
+        &self._boss
+    }
 }
 
 impl PostgresCommand for PostgresGetBoss {
@@ -47,11 +54,10 @@ impl PostgresCommand for PostgresGetBoss {
                 match statement.query(&[&self._id]) {
                     Ok(rows) => {    let mut iter = rows.iter();
                                      while let Some(row) = iter.next() {
-                                         self._label = Some(row.get("label"));
-                                         self._level = Some(row.get("level"));
-                                         self._drop = Some(row.get("drop"));
-
-                                         println!("{:?}",self._drop);
+                                         self._boss = Some(BossRow { _id: row.get("id"),
+                                                                _label: row.get("label"),
+                                                                _level: row.get("level"),
+                                                                _drop: row.get("drop") });
                                      }
 
                                      trans.commit().unwrap();
@@ -67,11 +73,10 @@ impl PostgresCommand for PostgresGetBoss {
                 match statement.query(&[&self._label]) {
                     Ok(rows) => {    let mut iter = rows.iter();
                                      while let Some(row) = iter.next() {
-                                         self._id = Some(row.get("id"));
-                                         self._level = Some(row.get("level"));
-                                         self._drop = Some(row.get("drop"));
-
-                                         println!("{:?}",self._drop);
+                                         self._boss = Some(BossRow { _id: row.get("id"),
+                                                                 _label: row.get("label"),
+                                                                 _level: row.get("level"),
+                                                                 _drop: row.get("drop") });
                                      }
 
                                      trans.commit().unwrap();
@@ -87,27 +92,37 @@ impl PostgresCommand for PostgresGetBoss {
     }
 }
 
+
+
 #[derive(Serialize)]
+pub struct ShortBossRow {
+    _id: i32,
+    _label: String,
+}
+
 pub struct PostgresGetBosses {
-    _bosses: Vec<String>
+    _bosses: LinkedList<ShortBossRow>
 }
 
 impl PostgresGetBosses {
     pub fn new() -> PostgresGetBosses {
-        PostgresGetBosses { _bosses: Vec::new() }
+        PostgresGetBosses { _bosses: LinkedList::new() }
+    }
+    pub fn getBosses(&self) -> &LinkedList<ShortBossRow> {
+        &self._bosses
     }
 }
 
 impl PostgresCommand for PostgresGetBosses {
     fn execute(&mut self,connect: &Transaction) -> Result<(),Error> {
         let trans = connect.transaction().unwrap();
-        let statement = trans.prepare("SELECT id, label FROM bosses ORDER BY id ASC;").unwrap();
+        let statement = trans.prepare("SELECT id, label FROM bosses;").unwrap();
         match statement.query(&[]) {
-            Ok(rows) => {  self._bosses.reserve(rows.len());
-                           let mut iter = rows.iter();
+            Ok(rows) => {  let mut iter = rows.iter();
                            while let Some(row) = iter.next() {
-                               let var: String = row.get("label");
-                               self._bosses.push(var);
+                               let boss = ShortBossRow { _id: row.get("id"),
+                                                          _label: row.get("label") };
+                               self._bosses.push_back(boss);
                            }
 
                            trans.commit().unwrap();

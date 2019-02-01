@@ -42,7 +42,12 @@ pub fn get_boss(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<R
     match bd_data.doCommand(&mut get_boss) {
         Ok(res) => {
             println!("get boss");
-            if let Ok(json) = serde_json::to_string(&get_boss) {
+            if get_boss.getBoss().is_none() {
+                let err_mes = format!("No boss found");
+                return Ok(Response::with((status::InternalServerError, err_mes)));
+            }
+
+            if let Ok(json) = serde_json::to_string(&get_boss.getBoss()) {
                 let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
                 return Ok(Response::with((content_type, status::Ok, json)));
             }
@@ -63,7 +68,7 @@ pub fn get_bosses(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult
     match bd_data.doCommand(&mut get_bosses) {
         Ok(res) => {
             println!("get bosses");
-            if let Ok(json) = serde_json::to_string(&get_bosses) {
+            if let Ok(json) = serde_json::to_string(&get_bosses.getBosses()) {
                 let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
                 return Ok(Response::with((content_type, status::Ok, json)));
             }
