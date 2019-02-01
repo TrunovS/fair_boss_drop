@@ -86,7 +86,7 @@ impl PostgresCommand for PostgresInsertItemType {
 
 
 #[derive(Serialize)]
-struct ItemRow {
+pub struct ItemRow {
     _id: i32,
     _label: String,
     _type: i32,
@@ -94,10 +94,7 @@ struct ItemRow {
     _equals: f32
 }
 
-
-#[derive(Serialize)]
 pub struct PostgresGetItem {
-    #[serde(skip_serializing)]
     _id: i32,
     _item: Option<ItemRow>,
 }
@@ -111,10 +108,10 @@ impl PostgresGetItem {
         self
     }
     pub fn isFound(&self) -> bool {
-        if let Some(ref r) = self._item {
-            return true;
-        }
-        return false;
+        self._item.is_some()
+    }
+    pub fn getItem(&self) -> Option<&ItemRow> {
+        self._item.as_ref()
     }
 }
 
@@ -143,9 +140,6 @@ impl PostgresCommand for PostgresGetItem {
     }
 }
 
-
-
-#[derive(Serialize)]
 pub struct PostgresGetItems {
     _items: LinkedList<ItemRow>,
 }
@@ -153,6 +147,9 @@ pub struct PostgresGetItems {
 impl PostgresGetItems {
     pub fn new() -> PostgresGetItems {
         PostgresGetItems { _items: LinkedList::new() }
+    }
+    pub fn getItems(&self) -> &LinkedList<ItemRow> {
+        &self._items
     }
 }
 
