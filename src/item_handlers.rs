@@ -37,7 +37,7 @@ pub fn insert_item_type(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> Iron
     let add_item_type: PostgresInsertItemType;
     match serde_json::from_str(&body) {
         Ok(res) => add_item_type = res,
-        Err(_) =>  return Ok(Response::with((status::BadRequest,
+        Err(_) =>  return Ok(Response::with((status::NotAcceptable,
                                              "can't deserialize body"))),
     }
 
@@ -84,7 +84,7 @@ pub fn get_item(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<R
     }
 
     if get_item.getItem().is_none() {
-        let err_mes = format!("id {} doesn't exist",id);
+        let err_mes = format!("id={} - doesn't exist",id);
         return Ok(Response::with((status::BadRequest, err_mes)));
     }
 
@@ -118,16 +118,21 @@ pub fn insert_item(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResul
 
     let mut body = String::new();
     if let Err(_) = req.body.read_to_string(&mut body) {
-        return Ok(Response::with((status::InternalServerError,
-                                  "couldn't read request body")));
+        return Ok(Response::with((status::BadRequest,"couldn't read request body")));
     }
 
-    let add_item: PostgresInsertItem = serde_json::from_str(&body).expect("can't parse body");
+    let add_item: PostgresInsertItem;
+    match serde_json::from_str(&body) {
+        Ok(res) => add_item = res,
+        Err(_) =>  return Ok(Response::with((status::NotAcceptable,
+                                             "couldn't deserialize body"))),
+    }
+
     let mut commands: Vec<Box<PostgresCommand>> = vec![Box::new(add_item.make_valid()),
                                                        Box::new(PostgresGetItems::new())];
 
     if let Err(er) = bd_data.doCommands(&mut commands) {
-        let err_mes = format!("insert item command execute error {}",er);
+        let err_mes = format!("insert item command execute error:\n {}",er);
         return Ok(Response::with((status::InternalServerError, err_mes)));
     }
 
@@ -142,5 +147,5 @@ pub fn insert_item(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResul
                                   "couldn't convert records to JSON")));
     }
 
-    panic!("couldn't downcast PostgresGetItems");
+    Ok(Response::with((status::InternalServerError,"some error happened :(")))
 }
