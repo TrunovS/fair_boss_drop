@@ -109,9 +109,6 @@ impl PostgresGetItem {
         self._id = id;
         self
     }
-    pub fn isFound(&self) -> bool {
-        self._item.is_some()
-    }
     pub fn getItem(&self) -> Option<&ItemRow> {
         self._item.as_ref()
     }
