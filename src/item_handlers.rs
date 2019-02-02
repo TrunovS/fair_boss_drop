@@ -60,7 +60,8 @@ pub fn insert_item_type(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> Iron
         return Ok(Response::with((status::InternalServerError,
                                   "couldn't convert records to JSON")));
     }
-    return Ok(Response::with((status::InternalServerError,"some error happened :(")));
+
+    Ok(Response::with((status::InternalServerError,"some error happened :(")))
 }
 
 pub fn get_item(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<Response> {
@@ -78,13 +79,12 @@ pub fn get_item(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<R
 
     let mut get_item = PostgresGetItem::new().with_id(id);
     if let Err(er) = bd_data.doCommand(&mut get_item) {
-        let err_mes = format!("get items command execute error {}",er);
+        let err_mes = format!("get items command execute error:\n {}",er);
         return Ok(Response::with((status::InternalServerError, err_mes)));
     }
 
-    println!("get item with id {}",id);
     if get_item.getItem().is_none() {
-        let err_mes = format!("id doesn't exist");
+        let err_mes = format!("id {} doesn't exist",id);
         return Ok(Response::with((status::BadRequest, err_mes)));
     }
 
@@ -93,32 +93,24 @@ pub fn get_item(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<R
         return Ok(Response::with((content_type, status::Ok, json)));
     }
 
-    return Ok(Response::with((status::InternalServerError,
-                              "couldn't convert records to JSON")));
+    Ok(Response::with((status::InternalServerError,"couldn't convert records to JSON")))
 }
-
-
-
 
 pub fn get_items(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<Response> {
     let mut bd_data = sdb.lock().unwrap();
 
     let mut get_items = PostgresGetItems::new();
-    match bd_data.doCommand(&mut get_items) {
-        Ok(_) => {
-            println!("get items");
-            if let Ok(json) = serde_json::to_string(get_items.getItems()) {
-                let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
-                return Ok(Response::with((content_type, status::Ok, json)));
-            }
-
-            return Ok(Response::with((status::InternalServerError,
-                                      "couldn't convert records to JSON")));
-        },
-        Err(er) => { let err_mes = format!("get items command execute error {}",er);
-                     return Ok(Response::with((status::InternalServerError, err_mes)));
-        }
+    if let Err(er) = bd_data.doCommand(&mut get_items) {
+        let err_mes = format!("get items command execute error:\n {}",er);
+        return Ok(Response::with((status::InternalServerError, err_mes)));
     }
+
+    if let Ok(json) = serde_json::to_string(get_items.getItems()) {
+        let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
+        return Ok(Response::with((content_type, status::Ok, json)));
+    }
+
+    Ok(Response::with((status::InternalServerError,"couldn't convert records to JSON")))
 }
 
 pub fn insert_item(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<Response> {
