@@ -3,7 +3,6 @@ use iron::mime::{Mime, TopLevel, SubLevel};
 
 use std::io::Read;
 use std::sync::Mutex;
-use std::any::Any;
 
 use BdLayer::ItemsCommands::*;
 use BdLayer::PostgresDealer::*;
@@ -15,7 +14,7 @@ pub fn get_item_types(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronRe
 
     let mut get_item_types = PostgresGetItemTypes::new();
     match bd_data.doCommand(&mut get_item_types) {
-        Ok(res) => {
+        Ok(_) => {
             println!("get item_types");
             if let Ok(json) = serde_json::to_string(&get_item_types) {
                 let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
@@ -35,12 +34,12 @@ pub fn insert_item_type(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> Iron
     let mut bd_data = sdb.lock().unwrap();
 
     let mut body = String::new();
-    if let Err(er) = req.body.read_to_string(&mut body) {
+    if let Err(_) = req.body.read_to_string(&mut body) {
         return Ok(Response::with((status::InternalServerError,
                                   "couldn't read request body")));
     }
 
-    let mut add_item_type: PostgresInsertItemType = serde_json::from_str(&body).
+    let add_item_type: PostgresInsertItemType = serde_json::from_str(&body).
         expect("can't parse body");
     let mut commands: Vec<Box<PostgresCommand>> = vec![
         Box::new(add_item_type), Box::new(PostgresGetItemTypes::new())];
@@ -50,8 +49,8 @@ pub fn insert_item_type(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> Iron
         return Ok(Response::with((status::InternalServerError, err_mes)));
     }
 
-    let mut bget_item_types = commands.pop().unwrap();
-    let mut aget = Box::leak(bget_item_types);
+    let bget_item_types = commands.pop().unwrap();
+    let aget = Box::leak(bget_item_types);
     if let Some(get_item_types) = aget.downcast_mut::<PostgresGetItemTypes>() {
         if let Ok(json) = serde_json::to_string(get_item_types) {
             let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
@@ -78,7 +77,7 @@ pub fn get_item(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<R
 
     let mut get_item = PostgresGetItem::new().with_id(id);
     match bd_data.doCommand(&mut get_item) {
-        Ok(res) => {
+        Ok(_) => {
             println!("get item with id {}",id);
             if !get_item.isFound() {
                 let err_mes = format!("get item command execute error, id not exists.");
@@ -107,7 +106,7 @@ pub fn get_items(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<
 
     let mut get_items = PostgresGetItems::new();
     match bd_data.doCommand(&mut get_items) {
-        Ok(res) => {
+        Ok(_) => {
             println!("get items");
             if let Ok(json) = serde_json::to_string(get_items.getItems()) {
                 let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
@@ -127,12 +126,12 @@ pub fn insert_item(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResul
     let mut bd_data = sdb.lock().unwrap();
 
     let mut body = String::new();
-    if let Err(er) = req.body.read_to_string(&mut body) {
+    if let Err(_) = req.body.read_to_string(&mut body) {
         return Ok(Response::with((status::InternalServerError,
                                   "couldn't read request body")));
     }
 
-    let mut add_item: PostgresInsertItem = serde_json::from_str(&body).expect("can't parse body");
+    let add_item: PostgresInsertItem = serde_json::from_str(&body).expect("can't parse body");
     let mut commands: Vec<Box<PostgresCommand>> = vec![Box::new(add_item.make_valid()),
                                                        Box::new(PostgresGetItems::new())];
 
@@ -141,8 +140,8 @@ pub fn insert_item(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResul
         return Ok(Response::with((status::InternalServerError, err_mes)));
     }
 
-    let mut bget_items = commands.pop().unwrap();
-    let mut aget = Box::leak(bget_items);
+    let bget_items = commands.pop().unwrap();
+    let aget = Box::leak(bget_items);
     if let Some(get_items) = aget.downcast_mut::<PostgresGetItems>() {
         if let Ok(json) = serde_json::to_string(get_items.getItems()) {
             let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());

@@ -17,15 +17,6 @@ impl PostgresCommand for PostgresInitTables {
             label VARCHAR NOT NULL UNIQUE
             );
 
-DO $$ BEGIN
-            CREATE TYPE item_quantity AS (
-            id INTEGER,
-            quantity INTEGER
-            );
-            EXCEPTION
-               WHEN duplicate_object THEN null;
-END $$;
-
             CREATE TABLE IF NOT EXISTS items (
             id SERIAL PRIMARY KEY,
             label VARCHAR NOT NULL UNIQUE,

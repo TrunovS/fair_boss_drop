@@ -6,21 +6,19 @@ use std::sync::Mutex;
 
 use BdLayer::BossCommands::*;
 use BdLayer::PostgresDealer::*;
-use BdLayer::ItemsCommands::ItemProbability;
 use fair_boss_drop_server::serde_json;
 
 pub fn insert_boss(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<Response> {
     let mut bd_data = sdb.lock().unwrap();
 
     let mut body = String::new();
-    if let Err(er) = req.body.read_to_string(&mut body) {
+    if let Err(_) = req.body.read_to_string(&mut body) {
         return Ok(Response::with((status::InternalServerError,
                                   "couldn't read request body")));
     }
 
-    let mut insert_boss: PostgresInsertBoss = serde_json::from_str(&body).
+    let insert_boss: PostgresInsertBoss = serde_json::from_str(&body).
         expect("can't parse body");
-    println!("{:?}",insert_boss);
 
     let mut commands: Vec<Box<PostgresCommand>> = vec![
         Box::new(insert_boss), Box::new(PostgresGetBosses::new())];
@@ -30,8 +28,8 @@ pub fn insert_boss(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResul
         return Ok(Response::with((status::InternalServerError, err_mes)));
     }
 
-    let mut bget_result = commands.pop().unwrap();
-    let mut aget = Box::leak(bget_result);
+    let bget_result = commands.pop().unwrap();
+    let aget = Box::leak(bget_result);
     if let Some(get_result) = aget.downcast_mut::<PostgresGetBosses>() {
         if let Ok(json) = serde_json::to_string(get_result.getBosses()) {
             let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
@@ -58,7 +56,7 @@ pub fn get_boss(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<R
 
     let mut get_boss = PostgresGetBoss::new().with_id(id);
     match bd_data.doCommand(&mut get_boss) {
-        Ok(res) => {
+        Ok(_) => {
             println!("get boss");
             if get_boss.getBoss().is_none() {
                 let err_mes = format!("No boss found");
@@ -84,7 +82,7 @@ pub fn get_bosses(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult
 
     let mut get_bosses = PostgresGetBosses::new();
     match bd_data.doCommand(&mut get_bosses) {
-        Ok(res) => {
+        Ok(_) => {
             println!("get bosses");
             if let Ok(json) = serde_json::to_string(&get_bosses.getBosses()) {
                 let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
