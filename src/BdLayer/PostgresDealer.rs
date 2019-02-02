@@ -1,8 +1,7 @@
-pub extern crate postgres;
+use ::postgres::{Connection,transaction::Transaction};
+use ::postgres::error::Error;
+use ::downcast_rs::Downcast;
 
-use self::postgres::{Connection, ConnectParams, ConnectTarget, UserInfo, SslMode};
-use self::postgres::error::{ConnectError, Error};
-use BdLayer::PostgresCommands::PostgresCommand;
 use BdLayer::Settings;
 
 
@@ -18,10 +17,15 @@ impl PostgresSqlData {
     }
 }
 
+pub trait PostgresCommand: Downcast {
+    fn execute(&mut self, transaction: &Transaction) -> Result<(), Error>;
+}
+impl_downcast!(PostgresCommand);
+
 pub trait PostgresDealer {
 
     /// Подключиться к БД (создать коннект).
-    fn connect(&mut self) -> Result<(), ConnectError>;
+    fn connect(&mut self) -> Result<(), Error>;
 
     /// Закрыть коннект к БД
     fn finish(&mut self) -> Result<(), Error>;
@@ -30,13 +34,16 @@ pub trait PostgresDealer {
     fn isOpen(&self) -> bool;
 
     /// Выполнить комманду
-    fn doCommand<T: PostgresCommand>(&mut self, command: T) -> Result<(),Error>;
+    fn doCommand<T: PostgresCommand+?Sized>(&mut self, command: &mut T) -> Result<(),Error>;
+
+    /// Выполнить комманды в одну трансзакцию.
+    fn doCommands<T: PostgresCommand+?Sized>(&mut self, commands: &mut Vec<Box<T>>) -> Result<(),Error>;
 }
 
 impl PostgresDealer for PostgresSqlData
 {
     /// Подключиться к БД (создать коннект).
-    fn connect(&mut self) -> Result<(), ConnectError> {
+    fn connect(&mut self) -> Result<(), Error> {
         if let Some(s) = &self._connection {
             panic!("Trying to open new connect when old is not closed Yet/");
         }
@@ -44,11 +51,11 @@ impl PostgresDealer for PostgresSqlData
         Settings::initConfig().unwrap();
         let (connect_par, ssl_mode) = Settings::readConfig();
 
-        if let Some(name) = &connect_par.database {
+        if let Some(name) = connect_par.database() {
             self._name = name.to_string();
         };
 
-        match Connection::connect(connect_par, &ssl_mode) {
+        match Connection::connect(connect_par, ssl_mode) {
             Ok(connection) => {
                 self._connection = Some(connection);
                 return Ok(());
@@ -82,13 +89,34 @@ impl PostgresDealer for PostgresSqlData
     }
 
     /// Выполнить комманду
-    fn doCommand<T: PostgresCommand>(&mut self, command: T) -> Result<(),Error> {
-        if self.isOpen() == false {
-            panic!("no connect to Bd");
-        }
-
+    fn doCommand<T: PostgresCommand+?Sized>(&mut self, command: &mut T) -> Result<(),Error> {
         match &mut self._connection {
-            Some(ref mut c) => return command.execute(c),
+            Some(ref mut c) => { let trans = c.transaction().unwrap();
+                                 if let Err(er) = command.execute(&trans) {
+                                     return Err(er);
+                                 }
+                                 trans.commit().unwrap();
+                                 return Ok(());
+            },
+            None => panic!("Trying to exec command to BD when there are no connection")
+        };
+    }
+
+    /// Выполнить комманды в одну трансзакцию.
+    fn doCommands<T: PostgresCommand+?Sized>(&mut self, commands: &mut Vec<Box<T>>) -> Result<(),Error> {
+        match &mut self._connection {
+            Some(ref mut c) => {
+                let trans = c.transaction().unwrap();
+
+                for command in commands.iter_mut() {
+                    if let Err(er) = command.execute(&trans) {
+                        return Err(er);
+                    }
+                }
+                trans.commit().unwrap();
+
+                return Ok(());
+            },
             None => panic!("Trying to exec command to BD when there are no connection")
         };
     }

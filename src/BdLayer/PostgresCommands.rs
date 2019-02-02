@@ -1,10 +1,5 @@
-// pub mod PostgresDealer;
-
-use BdLayer::PostgresDealer::postgres::{Connection, error::Error};
-
-pub trait PostgresCommand {
-    fn execute(&self, connect: &Connection) -> Result<(), Error> where Self: Sized;
-}
+use BdLayer::PostgresDealer::PostgresCommand;
+use ::postgres::{transaction::Transaction, error::Error};
 
 pub struct PostgresInitTables;
 impl PostgresInitTables {
@@ -14,15 +9,54 @@ impl PostgresInitTables {
 }
 
 impl PostgresCommand for PostgresInitTables {
-    fn execute(&self,connect: &Connection) -> Result<(),Error> {
-        connect.batch_execute("
-            CREATE TABLE subperson (
+    fn execute(&mut self,transaction: &Transaction) -> Result<(),Error> {
+        let nest_trans = transaction.transaction().unwrap();
+        let res = nest_trans.batch_execute("
+            CREATE TABLE IF NOT EXISTS item_types (
             id SERIAL PRIMARY KEY,
-            name VARCHAR NOT NULL );
+            label VARCHAR NOT NULL UNIQUE
+            );
 
-            CREATE TABLE person (
+DO $$ BEGIN
+            CREATE TYPE item_quantity AS (
+            id INTEGER,
+            quantity INTEGER
+            );
+            EXCEPTION
+               WHEN duplicate_object THEN null;
+END $$;
+
+            CREATE TABLE IF NOT EXISTS items (
             id SERIAL PRIMARY KEY,
-            name VARCHAR NOT NULL );
-           ")
+            label VARCHAR NOT NULL UNIQUE,
+            type SERIAL REFERENCES item_types (id),
+            exchangable BOOL,
+            equals REAL
+            );
+
+DO $$ BEGIN
+            CREATE TYPE item_probability AS (
+            id INTEGER,
+            probability REAL
+            );
+            EXCEPTION
+               WHEN duplicate_object THEN null;
+END $$;
+
+            CREATE TABLE IF NOT EXISTS bosses (
+            id SERIAL PRIMARY KEY,
+            label VARCHAR NOT NULL UNIQUE,
+            level INTEGER NOT NULL DEFAULT '0',
+            drop item_probability[]
+            );
+           ");
+
+        match res {
+            Ok(var) => {
+                nest_trans.commit().unwrap();
+                return Ok(())
+            },
+            Err(er) => return Err(er),
+        };
     }
 }

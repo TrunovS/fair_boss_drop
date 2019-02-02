@@ -4,7 +4,8 @@ version = "0.1.0"
 authors = ["sergey"]
 
 [dependencies]
-postgres = "0.9"
+postgres = "0.15"
+postgres-derive = "0.3"
 serde = "1.0"
 serde_json = "1.0"
 serde_derive = "1.0"
@@ -12,3 +13,4 @@ rust-ini = "0.13"
 iron = "*"
 router = "*"
 url = "*"
+downcast-rs = "1.0.3"
