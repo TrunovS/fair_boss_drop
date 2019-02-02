@@ -133,6 +133,7 @@ impl PostgresCommand for PostgresGetBosses {
     }
 }
 
+#[derive(Deserialize)]
 pub struct PostgresInsertBoss {
     _label: String,
     _level: i32,

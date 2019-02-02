@@ -12,17 +12,35 @@ use fair_boss_drop_server::serde_json;
 pub fn insert_boss(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<Response> {
     let mut bd_data = sdb.lock().unwrap();
 
-    let mut items : Vec<ItemProbability> = Vec::new();
-    items.push(ItemProbability{ _id:2, _probability: 0.5});
-    items.push(ItemProbability{ _id:3, _probability: 0.25});
-
-    let mut insert_boss = PostgresInsertBoss::new("boss4",2,items);
-    match bd_data.doCommand(&mut insert_boss) {
-        Ok(res) => {  println!("boss added"); },
-        Err(er) => {  println!("{}",er); }
+    let mut body = String::new();
+    if let Err(er) = req.body.read_to_string(&mut body) {
+        return Ok(Response::with((status::InternalServerError,
+                                  "couldn't read request body")));
     }
 
-    Ok(Response::with((status::Ok,"insert boss executed")))
+    let mut insert_boss: PostgresInsertBoss = serde_json::from_str(&body).
+        expect("can't parse body");
+    println!("{:?}",insert_boss);
+
+    let mut commands: Vec<Box<PostgresCommand>> = vec![
+        Box::new(insert_boss), Box::new(PostgresGetBosses::new())];
+
+    if let Err(er) = bd_data.doCommands(&mut commands) {
+        let err_mes = format!("insert boss command execute error {}",er);
+        return Ok(Response::with((status::InternalServerError, err_mes)));
+    }
+
+    let mut bget_result = commands.pop().unwrap();
+    let mut aget = Box::leak(bget_result);
+    if let Some(get_result) = aget.downcast_mut::<PostgresGetBosses>() {
+        if let Ok(json) = serde_json::to_string(get_result.getBosses()) {
+            let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
+            return Ok(Response::with((content_type, status::Ok, json)));
+        }
+    }
+
+    return Ok(Response::with((status::InternalServerError,
+                              "couldn't convert records to JSON")));
 }
 
 pub fn get_boss(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<Response> {

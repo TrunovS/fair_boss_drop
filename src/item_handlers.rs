@@ -40,9 +40,10 @@ pub fn insert_item_type(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> Iron
                                   "couldn't read request body")));
     }
 
-    let mut add_item_type: PostgresInsertItemType = serde_json::from_str(&body).expect("can't parse body");
-    let mut commands: Vec<Box<PostgresCommand>> = vec![Box::new(add_item_type),
-                                                       Box::new(PostgresGetItemTypes::new())];
+    let mut add_item_type: PostgresInsertItemType = serde_json::from_str(&body).
+        expect("can't parse body");
+    let mut commands: Vec<Box<PostgresCommand>> = vec![
+        Box::new(add_item_type), Box::new(PostgresGetItemTypes::new())];
 
     if let Err(er) = bd_data.doCommands(&mut commands) {
         let err_mes = format!("insert item_type command execute error {}",er);

@@ -41,6 +41,9 @@ fn serve(db: PostgresSqlData) {
     {   let sdb_ = sdb.clone();
         router.get("/api/v0/bosses/:id", move |req: &mut Request|
                    boss_handlers::get_boss(&sdb_.clone(), req), "get_boss");    }
+    {   let sdb_ = sdb.clone();
+        router.post("/api/v0/bosses", move |req: &mut Request|
+                   boss_handlers::insert_boss(&sdb_.clone(), req), "insert_boss");    }
 
     Iron::new(router).http("localhost:3000").expect("Error when start iron server.");
 }
