@@ -16,7 +16,7 @@ pub fn get_item_types(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronRe
     match bd_data.doCommand(&mut get_item_types) {
         Ok(_) => {
             println!("get item_types");
-            if let Ok(json) = serde_json::to_string(&get_item_types) {
+            if let Ok(json) = serde_json::to_string(get_item_types.getItemTypes()) {
                 let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
                 return Ok(Response::with((content_type, status::Ok, json)));
             }
@@ -52,7 +52,7 @@ pub fn insert_item_type(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> Iron
     let bget_item_types = commands.pop().unwrap();
     let aget = Box::leak(bget_item_types);
     if let Some(get_item_types) = aget.downcast_mut::<PostgresGetItemTypes>() {
-        if let Ok(json) = serde_json::to_string(get_item_types) {
+        if let Ok(json) = serde_json::to_string(get_item_types.getItemTypes()) {
             let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
             return Ok(Response::with((content_type, status::Ok, json)));
         }
