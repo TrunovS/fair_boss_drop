@@ -7,34 +7,33 @@ use ::serde_derive;
 #[derive(Debug, FromSql, ToSql)]
 #[postgres(name="item_probability")]
 pub struct ItemProbability {
-    #[postgres(name="id")]
-    pub _id: i32,
-    #[postgres(name="probability")]
-    pub _probability: f32,
+    pub id: i32,
+    pub probability: f32,
 }
 
 impl ItemProbability {
     pub fn new(id: i32, probability: f32) -> ItemProbability {
-        ItemProbability { _id: id, _probability: probability.into() }
+        ItemProbability { id: id, probability: probability.into() }
     }
 }
 
 #[derive(Serialize)]
 pub struct ItemTypeRow {
-    _id: i32,
-    _label: String,
+    id: i32,
+    label: String,
 }
 
+#[derive(Serialize)]
 pub struct PostgresGetItemTypes {
-    _items: LinkedList<ItemTypeRow>,
+    payload: LinkedList<ItemTypeRow>,
 }
 
 impl PostgresGetItemTypes {
     pub fn new() -> PostgresGetItemTypes {
-        PostgresGetItemTypes { _items: LinkedList::new() }
+        PostgresGetItemTypes { payload: LinkedList::new() }
     }
-    pub fn getItemTypes(&self) -> &LinkedList<ItemTypeRow> {
-        &self._items
+    pub fn getPayload(&self) -> &LinkedList<ItemTypeRow> {
+        &self.payload
     }
 }
 
@@ -47,9 +46,9 @@ impl PostgresCommand for PostgresGetItemTypes {
         match statement.query(&[]) {
             Ok(rows) => {    let mut iter = rows.iter();
                              while let Some(row) = iter.next() {
-                                 let item = ItemTypeRow { _id: row.get("id"),
-                                                          _label: row.get("label") };
-                                 self._items.push_back(item);
+                                 let item = ItemTypeRow { id: row.get("id"),
+                                                          label: row.get("label") };
+                                 self.payload.push_back(item);
                              }
 
                              nest_trans.commit().unwrap();
@@ -62,12 +61,12 @@ impl PostgresCommand for PostgresGetItemTypes {
 
 #[derive(Deserialize)]
 pub struct PostgresInsertItemType {
-    _label: String,
+    label: String,
 }
 
 impl PostgresInsertItemType {
     pub fn new(label: &str) -> PostgresInsertItemType {
-        PostgresInsertItemType { _label: label.to_string() }
+        PostgresInsertItemType { label: label.to_string() }
     }
 }
 
@@ -77,7 +76,7 @@ impl PostgresCommand for PostgresInsertItemType {
         let statement = nest_trans.prepare("INSERT INTO item_types VALUES(default, $1);")
             .unwrap();
 
-        match statement.query(&[&self._label]) {
+        match statement.query(&[&self.label]) {
             Ok(rows) => {    nest_trans.commit().unwrap();
                              return Ok(());
             },
@@ -89,28 +88,31 @@ impl PostgresCommand for PostgresInsertItemType {
 
 #[derive(Serialize)]
 pub struct ItemRow {
-    _id: i32,
-    _label: String,
-    _type: i32,
-    _exchangable: bool,
-    _equals: f32
+    id: i32,
+    label: String,
+    #[serde(rename = "type")]
+    item_type: i32,
+    exchangable: bool,
+    equals: f32
 }
 
+#[derive(Serialize)]
 pub struct PostgresGetItem {
-    _id: i32,
-    _item: Option<ItemRow>,
+    payload: Option<ItemRow>,
+    #[serde(skip)]
+    id: i32,
 }
 
 impl PostgresGetItem {
     pub fn new() -> PostgresGetItem {
-        PostgresGetItem { _id: 0, _item: None }
+        PostgresGetItem { id: 0, payload: None }
     }
     pub fn with_id(mut self,id: i32) -> PostgresGetItem {
-        self._id = id;
+        self.id = id;
         self
     }
-    pub fn getItem(&self) -> Option<&ItemRow> {
-        self._item.as_ref()
+    pub fn getPayload(&self) -> Option<&ItemRow> {
+        self.payload.as_ref()
     }
 }
 
@@ -120,15 +122,15 @@ impl PostgresCommand for PostgresGetItem {
         let statement = nest_trans.prepare("SELECT * FROM items where id=$1;")
             .unwrap();
 
-        match statement.query(&[&self._id]) {
+        match statement.query(&[&self.id]) {
             Ok(rows) => { let mut iter = rows.iter();
                           while let Some(row) = iter.next() {
-                              let item = ItemRow { _id: row.get("id"),
-                                                   _label: row.get("label"),
-                                                   _type: row.get("type"),
-                                                   _exchangable: row.get("exchangable"),
-                                                   _equals: row.get("equals") };
-                              self._item = Some(item);
+                              let item = ItemRow { id: row.get("id"),
+                                                   label: row.get("label"),
+                                                   item_type: row.get("type"),
+                                                   exchangable: row.get("exchangable"),
+                                                   equals: row.get("equals") };
+                              self.payload = Some(item);
                           }
 
                           nest_trans.commit().unwrap();
@@ -139,16 +141,17 @@ impl PostgresCommand for PostgresGetItem {
     }
 }
 
+#[derive(Serialize)]
 pub struct PostgresGetItems {
-    _items: LinkedList<ItemRow>,
+    payload: LinkedList<ItemRow>,
 }
 
 impl PostgresGetItems {
     pub fn new() -> PostgresGetItems {
-        PostgresGetItems { _items: LinkedList::new() }
+        PostgresGetItems { payload: LinkedList::new() }
     }
-    pub fn getItems(&self) -> &LinkedList<ItemRow> {
-        &self._items
+    pub fn getPayload(&self) -> &LinkedList<ItemRow> {
+        &self.payload
     }
 }
 
@@ -161,12 +164,12 @@ impl PostgresCommand for PostgresGetItems {
         match statement.query(&[]) {
             Ok(rows) => { let mut iter = rows.iter();
                           while let Some(row) = iter.next() {
-                              let item = ItemRow { _id: row.get("id"),
-                                                   _label: row.get("label"),
-                                                   _type: row.get("type"),
-                                                   _exchangable: row.get("exchangable"),
-                                                   _equals: row.get("equals") };
-                              self._items.push_back(item);
+                              let item = ItemRow { id: row.get("id"),
+                                                   label: row.get("label"),
+                                                   item_type: row.get("type"),
+                                                   exchangable: row.get("exchangable"),
+                                                   equals: row.get("equals") };
+                              self.payload.push_back(item);
                           }
 
                           nest_trans.commit().unwrap();
@@ -181,16 +184,17 @@ impl PostgresCommand for PostgresGetItems {
 
 #[derive(Deserialize)]
 pub struct PostgresInsertItem {
-    _label: String,
-    _type: i32,
-    _exchangable: bool,
-    _equals: f32
+    label: String,
+    #[serde(rename = "type")]
+    item_type: i32,
+    exchangable: bool,
+    equals: f32
 }
 
 impl PostgresInsertItem {
     pub fn make_valid(mut self) -> PostgresInsertItem {
-        if !self._exchangable {
-            self._equals = 0.0;
+        if !self.exchangable {
+            self.equals = 0.0;
         }
 
         self
@@ -204,8 +208,8 @@ impl PostgresCommand for PostgresInsertItem {
         let statement = nest_trans.prepare("INSERT INTO items VALUES(default, $1, $2, $3, $4);")
             .unwrap();
 
-        match statement.query(&[&self._label, &self._type,
-                                &self._exchangable, &self._equals]) {
+        match statement.query(&[&self.label, &self.item_type,
+                                &self.exchangable, &self.equals]) {
             Ok(rows) => {    nest_trans.commit().unwrap();
                              return Ok(());
             },
