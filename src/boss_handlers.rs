@@ -34,7 +34,7 @@ pub fn insert_boss(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResul
     let bget_result = commands.pop().unwrap();
     let aget = Box::leak(bget_result);
     if let Some(get_result) = aget.downcast_mut::<PostgresGetBosses>() {
-        if let Ok(json) = serde_json::to_string(get_result.getBosses()) {
+        if let Ok(json) = serde_json::to_string(get_result.getPayload()) {
             let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
             return Ok(Response::with((content_type, status::Ok, json)));
         }
@@ -64,12 +64,12 @@ pub fn get_boss(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<R
         return Ok(Response::with((status::InternalServerError, err_mes)));
     }
 
-    if get_boss.getBoss().is_none() {
+    if get_boss.getPayload().is_none() {
         let err_mes = format!("id={} - doesn't exist",id);
         return Ok(Response::with((status::BadRequest, err_mes)));
     }
 
-    if let Ok(json) = serde_json::to_string(&get_boss.getBoss()) {
+    if let Ok(json) = serde_json::to_string(&get_boss.getPayload()) {
         let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
         return Ok(Response::with((content_type, status::Ok, json)));
     }
@@ -86,7 +86,7 @@ pub fn get_bosses(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult
         return Ok(Response::with((status::InternalServerError, err_mes)));
     }
 
-    if let Ok(json) = serde_json::to_string(&get_bosses.getBosses()) {
+    if let Ok(json) = serde_json::to_string(&get_bosses.getPayload()) {
         let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
         return Ok(Response::with((content_type, status::Ok, json)));
     }

@@ -18,7 +18,7 @@ pub fn get_item_types(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronRe
         return Ok(Response::with((status::InternalServerError, err_mes)));
     }
 
-    if let Ok(json) = serde_json::to_string(get_item_types.getItemTypes()) {
+    if let Ok(json) = serde_json::to_string(get_item_types.getPayload()) {
         let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
         return Ok(Response::with((content_type, status::Ok, json)));
     }
@@ -53,7 +53,7 @@ pub fn insert_item_type(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> Iron
     let aget = Box::leak(bget_item_types);
     if let Some(get_item_types) = aget.downcast_mut::<PostgresGetItemTypes>()
     {
-        if let Ok(json) = serde_json::to_string(get_item_types.getItemTypes())  {
+        if let Ok(json) = serde_json::to_string(get_item_types.getPayload())  {
             let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
             return Ok(Response::with((content_type, status::Created, json)));
         }
@@ -83,12 +83,12 @@ pub fn get_item(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<R
         return Ok(Response::with((status::InternalServerError, err_mes)));
     }
 
-    if get_item.getItem().is_none() {
+    if get_item.getPayload().is_none() {
         let err_mes = format!("id={} - doesn't exist",id);
         return Ok(Response::with((status::BadRequest, err_mes)));
     }
 
-    if let Ok(json) = serde_json::to_string(&get_item.getItem()) {
+    if let Ok(json) = serde_json::to_string(&get_item.getPayload()) {
         let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
         return Ok(Response::with((content_type, status::Ok, json)));
     }
@@ -105,7 +105,7 @@ pub fn get_items(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResult<
         return Ok(Response::with((status::InternalServerError, err_mes)));
     }
 
-    if let Ok(json) = serde_json::to_string(get_items.getItems()) {
+    if let Ok(json) = serde_json::to_string(get_items.getPayload()) {
         let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
         return Ok(Response::with((content_type, status::Ok, json)));
     }
@@ -139,7 +139,7 @@ pub fn insert_item(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResul
     let bget_items = commands.pop().unwrap();
     let aget = Box::leak(bget_items);
     if let Some(get_items) = aget.downcast_mut::<PostgresGetItems>() {
-        if let Ok(json) = serde_json::to_string(get_items.getItems()) {
+        if let Ok(json) = serde_json::to_string(get_items.getPayload()) {
             let content_type = Mime(TopLevel::Application, SubLevel::Json, Vec::new());
             return Ok(Response::with((content_type, status::Ok, json)));
         }

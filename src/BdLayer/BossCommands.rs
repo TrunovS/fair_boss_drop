@@ -11,53 +11,53 @@ enum GetBossBy {
 
 #[derive(Serialize)]
 pub struct BossRow {
-    _id: i32,
-    _label: String,
-    _level: i32,
-    _drop: Vec<ItemProbability>,
+    id: i32,
+    label: String,
+    level: i32,
+    drop: Vec<ItemProbability>,
 }
 
 pub struct PostgresGetBoss {
-    _boss: Option<BossRow>,
-    _id: Option<i32>,
-    _label: Option<String>,
-    _opt: GetBossBy,
+    payload: Option<BossRow>,
+    id: Option<i32>,
+    label: Option<String>,
+    opt: GetBossBy,
 }
 
 impl PostgresGetBoss {
     pub fn new() -> PostgresGetBoss {
-        PostgresGetBoss { _boss: None, _label: None, _id: None, _opt: GetBossBy::NONE }
+        PostgresGetBoss { payload: None, label: None, id: None, opt: GetBossBy::NONE }
     }
     pub fn with_label(mut self,label: &str) -> PostgresGetBoss {
-        self._label = Some(String::from(label));
-        self._id = None;
-        self._opt = GetBossBy::LABEL;
+        self.label = Some(String::from(label));
+        self.id = None;
+        self.opt = GetBossBy::LABEL;
         self
     }
     pub fn with_id(mut self,id: i32) -> PostgresGetBoss {
-        self._label = None;
-        self._id = Some(id);
-        self._opt = GetBossBy::ID;
+        self.label = None;
+        self.id = Some(id);
+        self.opt = GetBossBy::ID;
         self
     }
-    pub fn getBoss(&self) -> &Option<BossRow> {
-        &self._boss
+    pub fn getPayload(&self) -> &Option<BossRow> {
+        &self.payload
     }
 }
 
 impl PostgresCommand for PostgresGetBoss {
     fn execute(&mut self,connect: &Transaction) -> Result<(),Error> {
         let trans = connect.transaction().unwrap();
-        match &self._opt {
+        match &self.opt {
             GetBossBy::ID => {
                 let statement = trans.prepare("SELECT * FROM bosses WHERE id=$1;").unwrap();
-                match statement.query(&[&self._id]) {
+                match statement.query(&[&self.id]) {
                     Ok(rows) => {    let mut iter = rows.iter();
                                      while let Some(row) = iter.next() {
-                                         self._boss = Some(BossRow { _id: row.get("id"),
-                                                                _label: row.get("label"),
-                                                                _level: row.get("level"),
-                                                                _drop: row.get("drop") });
+                                         self.payload = Some(BossRow { id: row.get("id"),
+                                                                label: row.get("label"),
+                                                                level: row.get("level"),
+                                                                drop: row.get("drop") });
                                      }
 
                                      trans.commit().unwrap();
@@ -70,13 +70,13 @@ impl PostgresCommand for PostgresGetBoss {
             },
             GetBossBy::LABEL => {
                 let statement = trans.prepare("SELECT * FROM bosses WHERE label=$1;").unwrap();
-                match statement.query(&[&self._label]) {
+                match statement.query(&[&self.label]) {
                     Ok(rows) => {    let mut iter = rows.iter();
                                      while let Some(row) = iter.next() {
-                                         self._boss = Some(BossRow { _id: row.get("id"),
-                                                                 _label: row.get("label"),
-                                                                 _level: row.get("level"),
-                                                                 _drop: row.get("drop") });
+                                         self.payload = Some(BossRow { id: row.get("id"),
+                                                                 label: row.get("label"),
+                                                                 level: row.get("level"),
+                                                                 drop: row.get("drop") });
                                      }
 
                                      trans.commit().unwrap();
@@ -96,20 +96,20 @@ impl PostgresCommand for PostgresGetBoss {
 
 #[derive(Serialize)]
 pub struct ShortBossRow {
-    _id: i32,
-    _label: String,
+    id: i32,
+    label: String,
 }
 
 pub struct PostgresGetBosses {
-    _bosses: LinkedList<ShortBossRow>
+    payload: LinkedList<ShortBossRow>
 }
 
 impl PostgresGetBosses {
     pub fn new() -> PostgresGetBosses {
-        PostgresGetBosses { _bosses: LinkedList::new() }
+        PostgresGetBosses { payload: LinkedList::new() }
     }
-    pub fn getBosses(&self) -> &LinkedList<ShortBossRow> {
-        &self._bosses
+    pub fn getPayload(&self) -> &LinkedList<ShortBossRow> {
+        &self.payload
     }
 }
 
@@ -120,9 +120,9 @@ impl PostgresCommand for PostgresGetBosses {
         match statement.query(&[]) {
             Ok(rows) => {  let mut iter = rows.iter();
                            while let Some(row) = iter.next() {
-                               let boss = ShortBossRow { _id: row.get("id"),
-                                                          _label: row.get("label") };
-                               self._bosses.push_back(boss);
+                               let boss = ShortBossRow { id: row.get("id"),
+                                                          label: row.get("label") };
+                               self.payload.push_back(boss);
                            }
 
                            trans.commit().unwrap();
@@ -135,14 +135,14 @@ impl PostgresCommand for PostgresGetBosses {
 
 #[derive(Deserialize)]
 pub struct PostgresInsertBoss {
-    _label: String,
-    _level: i32,
-    _drop: Vec<ItemProbability>,
+    label: String,
+    level: i32,
+    drop: Vec<ItemProbability>,
 }
 
 impl PostgresInsertBoss {
     pub fn new(label: &str, level: i32, drop: Vec<ItemProbability>) -> PostgresInsertBoss {
-        PostgresInsertBoss { _label: label.to_string(), _level: level, _drop: drop }
+        PostgresInsertBoss { label: label.to_string(), level: level, drop: drop }
     }
 }
 
@@ -152,7 +152,7 @@ impl PostgresCommand for PostgresInsertBoss {
 
         let statement = trans.prepare("INSERT INTO bosses VALUES(default, $1, $2, $3);").unwrap();
 
-        match statement.query(&[&self._label,&self._level,&self._drop]) {
+        match statement.query(&[&self.label,&self.level,&self.drop]) {
             Ok(rows) => {    trans.commit().unwrap();
                              return Ok(());
             },
