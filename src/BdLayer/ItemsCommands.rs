@@ -99,6 +99,7 @@ pub struct ItemRow {
 #[derive(Serialize)]
 pub struct PostgresGetItem {
     payload: Option<ItemRow>,
+    #[serde(skip)]
     id: i32,
 }
 
@@ -140,6 +141,7 @@ impl PostgresCommand for PostgresGetItem {
     }
 }
 
+#[derive(Serialize)]
 pub struct PostgresGetItems {
     payload: LinkedList<ItemRow>,
 }

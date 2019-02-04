@@ -17,10 +17,15 @@ pub struct BossRow {
     drop: Vec<ItemProbability>,
 }
 
+
+#[derive(Serialize)]
 pub struct PostgresGetBoss {
     payload: Option<BossRow>,
+    #[serde(skip)]
     id: Option<i32>,
+    #[serde(skip)]
     label: Option<String>,
+    #[serde(skip)]
     opt: GetBossBy,
 }
 
@@ -100,6 +105,7 @@ pub struct ShortBossRow {
     label: String,
 }
 
+#[derive(Serialize)]
 pub struct PostgresGetBosses {
     payload: LinkedList<ShortBossRow>
 }
@@ -107,9 +113,6 @@ pub struct PostgresGetBosses {
 impl PostgresGetBosses {
     pub fn new() -> PostgresGetBosses {
         PostgresGetBosses { payload: LinkedList::new() }
-    }
-    pub fn getPayload(&self) -> &LinkedList<ShortBossRow> {
-        &self.payload
     }
 }
 
