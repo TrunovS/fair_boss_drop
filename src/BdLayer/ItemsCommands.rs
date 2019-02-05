@@ -188,17 +188,8 @@ pub struct PostgresInsertItem {
     #[serde(rename = "type")]
     item_type: i32,
     exchangable: bool,
+    #[serde(default)]
     equals: f32
-}
-
-impl PostgresInsertItem {
-    pub fn make_valid(mut self) -> PostgresInsertItem {
-        if !self.exchangable {
-            self.equals = 0.0;
-        }
-
-        self
-    }
 }
 
 

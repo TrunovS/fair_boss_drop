@@ -128,7 +128,7 @@ pub fn insert_item(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResul
                                              "couldn't deserialize body"))),
     }
 
-    let mut commands: Vec<Box<PostgresCommand>> = vec![Box::new(add_item.make_valid()),
+    let mut commands: Vec<Box<PostgresCommand>> = vec![Box::new(add_item),
                                                        Box::new(PostgresGetItems::new())];
 
     if let Err(er) = bd_data.doCommands(&mut commands) {
