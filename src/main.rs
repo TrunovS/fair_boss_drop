@@ -2,7 +2,6 @@ extern crate fair_boss_drop_server;
 
 extern crate iron;
 extern crate router;
-extern crate url;
 
 use iron::*;
 use std::sync::{Arc, Mutex};
@@ -12,11 +11,15 @@ use BdLayer::PostgresDealer::*;
 use BdLayer::PostgresCommands::PostgresInitTables;
 mod item_handlers;
 mod boss_handlers;
+mod auth_handlers;
 
 
 fn serve(db: PostgresSqlData) {
     let sdb = Arc::new(Mutex::new(db));
     let mut router = router::Router::new();
+    {   let sdb_ = sdb.clone();
+        router.get("/login", move |req: &mut Request|
+                   auth_handlers::login(&sdb_.clone(), req), "login_endpoint"); }
 
     {   let sdb_ = sdb.clone();
         router.get("/api/v0/itemtypes", move |req: &mut Request|

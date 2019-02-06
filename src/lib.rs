@@ -14,5 +14,6 @@ pub extern crate serde_json;
 #[macro_use]
 pub extern crate downcast_rs;
 
+pub extern crate oauth2;
 
 pub mod BdLayer;
