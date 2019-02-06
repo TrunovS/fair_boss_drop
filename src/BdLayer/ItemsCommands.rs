@@ -192,6 +192,15 @@ pub struct PostgresInsertItem {
     equals: f32
 }
 
+impl PostgresInsertItem {
+    pub fn is_valid(&self) -> bool {
+        if !self.exchangable && self.equals!=0.0 {
+            return false;
+        }
+        return true;
+    }
+}
+
 
 impl PostgresCommand for PostgresInsertItem {
     fn execute(&mut self,transaction: &Transaction) -> Result<(),Error> {

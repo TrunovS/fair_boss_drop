@@ -123,7 +123,12 @@ pub fn insert_item(sdb: &Mutex<PostgresSqlData>, req: &mut Request) -> IronResul
 
     let add_item: PostgresInsertItem;
     match serde_json::from_str(&body) {
-        Ok(res) => add_item = res,
+        Ok(res) => { add_item = res;
+                     if !add_item.is_valid() {
+                         return Ok(Response::with((status::NotAcceptable,
+                                                   "couldn't deserialize body")));
+                     }
+        },
         Err(_) =>  return Ok(Response::with((status::NotAcceptable,
                                              "couldn't deserialize body"))),
     }
