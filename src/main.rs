@@ -1,18 +1,24 @@
 extern crate fair_boss_drop_server;
 
 extern crate iron;
+extern crate iron_sessionstorage;
+extern crate params;
 extern crate router;
 
 use iron::*;
+use iron_sessionstorage::traits::*;
+use iron_sessionstorage::SessionStorage;
+use iron_sessionstorage::backends::SignedCookieBackend;
+
 use std::sync::{Arc, Mutex};
 
 use fair_boss_drop_server::BdLayer;
 use BdLayer::PostgresDealer::*;
 use BdLayer::PostgresCommands::PostgresInitTables;
+
 mod item_handlers;
 mod boss_handlers;
 mod auth_handlers;
-
 
 fn serve(db: PostgresSqlData) {
     let sdb = Arc::new(Mutex::new(db));
@@ -20,7 +26,7 @@ fn serve(db: PostgresSqlData) {
     {  router.get("/login", move |req: &mut Request|
                   auth_handlers::login(req), "login_endpoint"); }
     {  router.get("/auth", move |req: &mut Request|
-                  auth_handlers::auth(req), "auth_endpoint"); }
+                  auth_handlers::authorize(req), "auth_endpoint"); }
 
 
     {   let sdb_ = sdb.clone();
@@ -48,9 +54,13 @@ fn serve(db: PostgresSqlData) {
                    boss_handlers::get_boss(&sdb_.clone(), req), "get_boss");    }
     {   let sdb_ = sdb.clone();
         router.post("/api/v0/bosses", move |req: &mut Request|
-                   boss_handlers::insert_boss(&sdb_.clone(), req), "insert_boss");    }
+                    boss_handlers::insert_boss(&sdb_.clone(), req), "insert_boss");    }
 
-    Iron::new(router).http("localhost:3000").expect("Error when start iron server.");
+    let my_secret = b"verysecret".to_vec();
+    let mut chain = Chain::new(router);
+    chain.link_around(SessionStorage::new(SignedCookieBackend::new(my_secret)));
+
+    Iron::new(chain).http("localhost:3000").expect("Error when start iron server.");
 }
 
 
