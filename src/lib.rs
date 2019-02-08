@@ -1,3 +1,5 @@
+pub extern crate iron_sessionstorage;
+
 #[macro_use]
 pub extern crate postgres;
 
