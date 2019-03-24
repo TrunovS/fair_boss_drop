@@ -26,18 +26,6 @@ struct Login {
     username: String
 }
 
-impl iron_sessionstorage::Value for Login {
-    fn get_key() -> &'static str { "logged_in_user" }
-    fn into_raw(self) -> String { self.username }
-    fn from_raw(value: String) -> Option<Self> {
-        if value.is_empty() {
-            None
-        } else {
-            Some(Login { username: value })
-        }
-    }
-}
-
 pub fn login(req: &mut Request) -> IronResult<Response> {
     // let google_client_id = env::var("GOOGLE_CLIENT_ID").
     //     expect("Missing the GOOGLE_CLIENT_ID environment variable.");
